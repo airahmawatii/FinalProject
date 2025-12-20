@@ -16,19 +16,11 @@ register_shutdown_function(function() {
     }
 });
 
-<<<<<<< HEAD
-
 require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/config/database.php';
 require_once __DIR__ . '/../../app/Models/TaskModel.php';
 require_once __DIR__ . '/../../app/Models/UserModel.php';
 require_once __DIR__ . '/../../app/Services/CalendarService.php';
-=======
-require_once __DIR__ . '/../../app/config/database.php';
-require_once __DIR__ . '/../../app/Models/TaskModel.php';
-require_once __DIR__ . '/../../app/Models/UserModel.php';
-require_once __DIR__ . '/../../app/Services/GoogleCalendarService.php';
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
 
 if (!isset($_SESSION['user'])) {
     http_response_code(401);
@@ -75,7 +67,6 @@ try {
     }
 
     // Sync to Calendar
-<<<<<<< HEAD
     $calendarService = new CalendarService();
     
     // Estimate Event Duration (1 Hour from deadline)
@@ -94,28 +85,6 @@ try {
     } else {
         throw new Exception("Gagal sinkronisasi. Cek log server atau pastikan token valid.");
     }
-=======
-    // Pass Access Token, Refresh Token, User ID, and PDO for Auto-Refresh capability
-    $calendarService = new GoogleCalendarService(
-        $user['access_token'], 
-        $user['refresh_token'] ?? null, 
-        $user['id'], 
-        $pdo
-    );
-    
-    $event = $calendarService->addTaskEvent(
-        $task['task_title'], // Fixed Title Key
-        $task['course_name'],
-        $task['description'],
-        $task['deadline']
-    );
-
-    echo json_encode([
-        'status' => 'success', 
-        'message' => 'Berhasil ditambahkan ke Google Calendar',
-        'link' => $event->htmlLink
-    ]);
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
 
 } catch (Exception $e) {
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);

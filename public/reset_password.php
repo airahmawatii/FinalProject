@@ -68,21 +68,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$error) {
                 <?= htmlspecialchars($error) ?>
             </div>
             <?php if (strpos($error, 'kadaluarsa') !== false): ?>
-<<<<<<< HEAD
+
                 <a href="<?= BASE_URL ?>/views/auth/forgot_password.php" class="block text-center text-blue-600 font-bold mb-4">Request Ulang</a>
-=======
-                <a href="forgot_password.php" class="block text-center text-blue-600 font-bold mb-4">Request Ulang</a>
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
+
             <?php endif; ?>
         <?php elseif ($success): ?>
             <div class="bg-green-50 text-green-600 p-4 rounded-xl mb-6 font-medium border border-green-100 text-center">
                 <p class="text-xl mb-2">🎉</p>
                 <?= htmlspecialchars($success) ?>
-<<<<<<< HEAD
+
                 <a href="<?= BASE_URL ?>/index.php?page=login" class="block mt-4 bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700">Login Sekarang</a>
-=======
-                <a href="<?= BASE_URL ?>/index.php" class="block mt-4 bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700">Login Sekarang</a>
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
+
             </div>
         <?php else: ?>
             <p class="text-gray-500 mb-6">Masukkan password baru Anda.</p>

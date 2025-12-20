@@ -43,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="w-full max-w-lg bg-white p-8 rounded-3xl shadow-2xl">
 
-<<<<<<< HEAD
     <div class="mb-6">
         <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-gray-400 hover:text-blue-600 mb-2 transition text-sm font-semibold group">
              <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -52,13 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="flex justify-between items-center">
             <h2 class="text-2xl font-bold text-gray-800">Edit Kelas</h2>
             <!-- <a href="index.php" class="text-gray-400 hover:text-red-500 transition">✕</a> -->
-        </div>
-=======
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Edit Kelas</h2>
-        <a href="index.php" class="text-gray-400 hover:text-red-500 transition">✕</a>
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
-    </div>
+        </div>    </div>
 
     <?php if ($error): ?>
         <div class="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-sm"><?= $error ?></div>

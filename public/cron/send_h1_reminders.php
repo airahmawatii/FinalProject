@@ -79,11 +79,7 @@ foreach ($tasks as $task) {
 
     echo "Processing [{$typeLabel}]: [{$task['course_name']}] {$task['task_title']}\n";
     
-    // Get enrolled students
-<<<<<<< HEAD
     // Get enrolled students WHO HAVE NOT COMPLETED the task
-=======
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
     $enrollSql = "
         SELECT DISTINCT u.id, u.nama, u.email
         FROM users u
@@ -91,7 +87,6 @@ foreach ($tasks as $task) {
         WHERE e.course_id = :course_id
         AND u.role = 'mahasiswa'
         AND u.status = 'active'
-<<<<<<< HEAD
         AND NOT EXISTS (
             SELECT 1 FROM task_completions tc 
             WHERE tc.user_id = u.id 
@@ -104,12 +99,6 @@ foreach ($tasks as $task) {
         'course_id' => $task['course_id'],
         'task_id' => $task['id']
     ]);
-=======
-    ";
-    
-    $enrollStmt = $pdo->prepare($enrollSql);
-    $enrollStmt->execute(['course_id' => $task['course_id']]);
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
     $students = $enrollStmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo "  → Sending to " . count($students) . " student(s)...\n";

@@ -77,32 +77,9 @@ if (isset($_GET['msg'])) {
         <!-- Header -->
         <div class="flex justify-between items-center mb-8">
             <div class="flex items-center gap-4">
-<<<<<<< HEAD
                 <a href="javascript:history.back()" class="bg-indigo-100 hover:bg-indigo-200 p-2 rounded-xl transition group">
                      <svg class="w-6 h-6 text-indigo-600 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                </a>
-=======
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
-                <a href="../dashboard_admin.php" class="bg-indigo-100 hover:bg-indigo-200 p-2 rounded-xl transition">
-                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                </a>
-                <div>
-                    <h1 class="text-3xl font-bold">Kelola Pengguna</h1>
-                    <p class="text-blue-200 text-sm">Manajemen akun Dosen, Mahasiswa, dan Admin.</p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-<<<<<<< HEAD
-                <a href="export_users.php" class="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
-                    <span>📂</span> Export CSV
-                </a>
-=======
-                <button onclick="document.getElementById('csvFile').click()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
-                    <span>📂</span> Import Excel/CSV
-                </button>
-                <input type="file" id="csvFile" accept=".csv" class="hidden">
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
-                
+                </a>                
                 <a href="user_add.php" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
                     <span>+</span> Tambah Pengguna
                 </a>
@@ -196,67 +173,7 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
         }
     });
 });
-<<<<<<< HEAD
-=======
 
-// CSV Import Logic
-const csvInput = document.getElementById('csvFile');
-csvInput.addEventListener('change', function() {
-    if (this.files.length === 0) return;
-
-    const formData = new FormData();
-    formData.append('csv_file', this.files[0]);
-
-    Swal.fire({
-        title: 'Mengupload...',
-        text: 'Mohon tunggu sebentar',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    fetch('../../api/import_students.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            let details = '';
-            if (data.details && data.details.length > 0) {
-                details = '<br><div class="text-left text-xs bg-gray-100 p-2 rounded mt-2 max-h-40 overflow-y-auto">' + data.details.join('<br>') + '</div>';
-            }
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Import Selesai!',
-                html: data.message + details,
-                confirmButtonText: 'Oke'
-            }).then(() => {
-                location.reload();
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal Import',
-                text: data.message
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Terjadi Kesalahan',
-            text: 'Gagal menghubungi server.'
-        });
-    });
-    
-    // Reset input
-    this.value = '';
-});
->>>>>>> d18683958109ae9fe0244a71fdc030651f124058
 </script>
 
 </body>
