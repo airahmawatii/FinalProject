@@ -179,6 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .sidebar { background: rgba(15, 23, 42, 0.95); }
     </style>
 </head>
+<<<<<<< HEAD
 <body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex items-center justify-center p-6 text-gray-800">
 
     <!-- Background Orbs -->
@@ -254,6 +255,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </form>
     </div>
+=======
+<body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex text-gray-800">
+
+    <!-- Include Shared Sidebar -->
+    <?php include __DIR__ . '/../layouts/sidebar_dosen.php'; ?>
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 relative overflow-y-auto w-full transition-all duration-300 md:ml-72">
+        <!-- Background Orbs -->
+        <div class="fixed inset-0 pointer-events-none z-0">
+             <div class="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
+             <div class="absolute bottom-[20%] left-[10%] w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] mix-blend-screen"></div>
+        </div>
+
+        <div class="p-6 md:p-10 relative z-10 max-w-5xl mx-auto pt-20 md:pt-10">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2 text-white">Buat Tugas Baru</h1>
+                    <p class="text-blue-200">Isi form di bawah untuk memberikan tugas ke mahasiswa.</p>
+                </div>
+            </div>
+
+            <!-- Form Card (White Glass) -->
+            <div class="glass rounded-3xl p-8 md:p-10 shadow-xl">
+                 <?php if ($success): ?>
+                    <script>
+                        Swal.fire({
+                            icon: 'success', title: 'Berhasil!', text: '<?= $success ?>', showConfirmButton: true
+                        }).then(() => window.location.href = 'dashboard.php');
+                    </script>
+                <?php endif; ?>
+                <?php if ($error): ?>
+                    <script>Swal.fire({ icon: 'error', title: 'Gagal', text: '<?= $error ?>' });</script>
+                <?php endif; ?>
+
+                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Mata Kuliah</label>
+                            <div class="relative">
+                                <select name="course_id" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-semibold text-gray-700">
+                                    <option value="">-- Pilih Mata Kuliah --</option>
+                                    <?php foreach ($courses as $c): ?>
+                                        <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?> (Sem. <?= htmlspecialchars($c['semester']) ?>)</option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Deadline</label>
+                            <input type="datetime-local" name="deadline" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-gray-700">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
+                        <input type="text" name="title" required placeholder="Contoh: Tugas Pengganti UTS" class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-gray-800">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Email Tester <span class="text-blue-500 font-normal">(Opsional)</span></label>
+                        <input type="email" name="test_email" placeholder="email.teman@example.com (Untuk tes notifikasi)" class="w-full px-5 py-3 bg-blue-50/50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium text-gray-800 placeholder-blue-300">
+                        <p class="text-xs text-blue-400 mt-1">*Jika diisi, notifikasi juga akan dikirim ke email ini.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Deskripsi</label>
+                        <textarea name="description" rows="5" placeholder="Detail instruksi..." class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium text-gray-700"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Lampiran <span class="font-normal text-gray-400">(Opsional)</span></label>
+                        <input type="file" name="attachment" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg transition transform hover:-translate-y-1">🚀 Simpan & Kirim</button>
+                        <a href="dashboard.php" class="px-8 py-4 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold transition">Batal</a>
+                    </div>
+                </form>
+            </div>
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
         </div>
     </main>
 </body>

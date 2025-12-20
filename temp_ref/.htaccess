@@ -1,0 +1,23 @@
+# Nonaktifkan directory browsing (agar orang gabisa liat isi folder)
+Options -Indexes
+
+# Amankan file sensitif
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "^(composer\.json|composer\.lock|package\.json|package-lock\.json|README\.md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Izinkan akses ke .well-known (biasanya untuk SSL Let's Encrypt)
+<FilesMatch "^\.well-known">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# BLOCKING AKSES LANGSUNG KE FOLDER APP & VENDOR
+RewriteEngine On
+RewriteRule ^(app|vendor|setup_database|skrip_otomatis)/ - [F,L]

@@ -165,6 +165,7 @@ foreach ($tasks as $t) {
                         <div id='calendar' class="text-sm"></div>
                     </div>
 
+<<<<<<< HEAD
                         <!-- Gantt Chart (Bottom & Compact) -->
                         <div class="glass rounded-3xl p-6 shadow-xl">
                              <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
@@ -173,6 +174,15 @@ foreach ($tasks as $t) {
                             <!-- Dynamic Height handled by JS -->
                             <div id="gantt-chart"></div>
                         </div>
+=======
+                    <!-- Gantt Chart (Bottom & Compact) -->
+                    <div class="glass rounded-3xl p-6 shadow-xl">
+                         <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
+                            <span>⏳</span> Timeline Pengerjaan
+                        </h3>
+                        <!-- Constrained Height -->
+                        <div id="gantt-chart" class="h-64"></div>
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
                     </div>
                 </div>
 
@@ -183,12 +193,19 @@ foreach ($tasks as $t) {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+<<<<<<< HEAD
+=======
+            // Mobile Sidebar Toggle... (Logic same as previous)
+            // Mobile Sidebar Logic REMOVED (Handled by sidebar_mahasiswa.php)
+
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
             // Fetch Data
             fetch('<?= BASE_URL ?>/api/get_tasks.php')
                 .then(response => response.json())
                 .then(tasks => {
                     // Calendar
                     var calendarEl = document.getElementById('calendar');
+<<<<<<< HEAD
                     if (calendarEl) {
                         var calendar = new FullCalendar.Calendar(calendarEl, {
                             initialView: 'dayGridMonth',
@@ -215,6 +232,34 @@ foreach ($tasks as $t) {
                     }
 
                     // Gantt (ApexCharts)
+=======
+                    var calendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: 'dayGridMonth',
+                        headerToolbar: { left: 'title', right: 'prev,next' },
+                        titleFormat: { year: '2-digit', month: 'short' },
+                        height: 'auto',
+                        events: tasks.map(t => ({
+                            title: t.title,
+                            start: t.start, // Show range from created_at
+                            end: t.end,     // To deadline
+                            backgroundColor: '#2563EB',
+                            borderColor: '#2563EB',
+                            allDay: true // Make it a strip
+                        })),
+                        eventClick: function(info) {
+                            // Optional: Show detail on click
+                            Swal.fire({
+                                title: info.event.title,
+                                text: 'Deadline: ' + new Date(info.event.end).toLocaleDateString(),
+                                icon: 'info'
+                            });
+                        }
+                    });
+                    calendar.render();
+
+                    // Gantt
+                     // Gantt (ApexCharts)
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
                      var options = {
                         series: [{
                             name: 'Jadwal Pengerjaan',
@@ -225,8 +270,12 @@ foreach ($tasks as $t) {
                             }))
                         }],
                         chart: {
+<<<<<<< HEAD
                             // Validasi Data Length untuk tinggi dinamis
                             height: tasks.length > 0 ? Math.max(350, tasks.length * 65) : 350, 
+=======
+                            height: '100%', // Follow parent h-64
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
                             type: 'rangeBar',
                             fontFamily: 'Outfit, sans-serif',
                             toolbar: { show: false },
@@ -242,7 +291,11 @@ foreach ($tasks as $t) {
                         },
                         xaxis: { 
                             type: 'datetime',
+<<<<<<< HEAD
                             position: 'top', 
+=======
+                            position: 'top', // Time axis on top like standard Gantt
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
                             labels: {
                                 format: 'dd MMM',
                                 style: { colors: '#64748b', fontSize: '11px', fontWeight: 600 }

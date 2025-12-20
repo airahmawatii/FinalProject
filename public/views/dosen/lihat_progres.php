@@ -51,6 +51,7 @@ $percentage = $total > 0 ? round(($completed / $total) * 100) : 0;
         }
     </style>
 </head>
+<<<<<<< HEAD
 <body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex items-center justify-center p-6 text-gray-800">
 
     <!-- Background Orbs -->
@@ -73,6 +74,22 @@ $percentage = $total > 0 ? round(($completed / $total) * 100) : 0;
                 </div>
             </div>
         </div>
+=======
+<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 min-h-screen text-gray-800 p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center gap-4">
+                <a href="daftar_tugas.php" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </a>
+                <div class="text-white">
+                    <h1 class="text-3xl font-bold">Progres Pengerjaan</h1>
+                    <p class="text-blue-200 text-sm"><?= htmlspecialchars($taskDetails['task_title']) ?> - <?= htmlspecialchars($taskDetails['course_name']) ?></p>
+                </div>
+            </div>
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
             
             <div class="glass px-6 py-3 rounded-xl flex items-center gap-4">
                 <div>

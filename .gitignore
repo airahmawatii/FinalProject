@@ -1,4 +1,6 @@
 .env
-/setup_database/database_backup.sql
-/app/google
 /vendor/
+**/vendor/
+node_modules/
+*.zip
+setup_database/database_backup.sql

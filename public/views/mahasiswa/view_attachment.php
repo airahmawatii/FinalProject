@@ -40,9 +40,15 @@ $is_previewable = in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'gif']);
 
     <!-- Header with Back Button -->
     <div class="bg-white/10 backdrop-blur-md border-b border-white/10 p-4 sticky top-0 z-50 flex items-center gap-4 shadow-lg">
+<<<<<<< HEAD
         <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-semibold group">
              <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
              Kembali
+=======
+        <a href="dashboard_mahasiswa.php" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Kembali
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
         </a>
         <h1 class="text-white font-bold text-lg truncate"><?= htmlspecialchars($file) ?></h1>
         <a href="<?= $fileurl ?>" download class="ml-auto bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-bold transition text-sm flex items-center gap-2">

@@ -23,6 +23,7 @@ class UserModel {
     public function getAll() {
         return $this->pdo->query("SELECT * FROM users")->fetchAll(PDO::FETCH_ASSOC);
     }
+<<<<<<< HEAD
 
     // This method was missing and caused the fatal error
     public function getByRole($role) {
@@ -63,6 +64,39 @@ class UserModel {
     public function getPendingUsers() {
         return $this->pdo->query("SELECT * FROM users WHERE status='pending'")->fetchAll(PDO::FETCH_ASSOC);
     }
+=======
+    public function getDosenCourse($dosen_id) {
+    $stmt = $this->pdo->prepare("SELECT * FROM dosen_courses WHERE dosen_id = ?");
+    $stmt->execute([$dosen_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+public function findById($id) {
+    $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id=?");
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+public function update($id, $nama, $email, $role) {
+    $stmt = $this->pdo->prepare("
+        UPDATE users SET nama=?, email=?, role=? WHERE id=?
+    ");
+    return $stmt->execute([$nama, $email, $role, $id]);
+}
+
+public function delete($id) {
+    $stmt = $this->pdo->prepare("DELETE FROM users WHERE id=?");
+    return $stmt->execute([$id]);
+}
+
+public function activateUser($id, $role) {
+    $stmt = $this->pdo->prepare("UPDATE users SET status='active', role=? WHERE id=?");
+    return $stmt->execute([$role, $id]);
+}
+
+public function getPendingUsers() {
+    return $this->pdo->query("SELECT * FROM users WHERE status='pending'")->fetchAll(PDO::FETCH_ASSOC);
+}
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
 
     public function updateGoogleTokens($id, $accessToken, $refreshToken, $expires) {
         if ($refreshToken) {

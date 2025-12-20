@@ -8,12 +8,15 @@ class TaskModel
         $this->db = $pdo;
     }
 
+<<<<<<< HEAD
     public function getAll()
     {
         $stmt = $this->db->query("SELECT * FROM tasks");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+=======
+>>>>>>> d18683958109ae9fe0244a71fdc030651f124058
     public function getByDosen($dosen_id)
     {
         $stmt = $this->db->prepare("SELECT tasks.*, courses.name AS course_name 
