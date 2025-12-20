@@ -1,0 +1,28 @@
+========================================== 
+Running H-1 Reminder Script 
+Started at: Sat 12/20/2025 23:35:33.39 
+========================================== 
+
+Warning: Undefined array key "HTTP_HOST" in C:\laragon\www\FinalProject\app\config\config.php on line 4
+[2025-12-20 23:35:34] Starting Deadline Reminder Script (H-1 & Hari H)...
+Checking for deadlines on: 2025-12-20 (Hari H) and 2025-12-21 (H-1)
+Found 0 task(s) to process.
+
+No reminders to send. Exiting.
+ 
+Completed at: Sat 12/20/2025 23:35:34.57 
+ 
+========================================== 
+Running H-1 Reminder Script 
+Started at: Sat 12/20/2025 23:35:58.14 
+========================================== 
+
+Warning: Undefined array key "HTTP_HOST" in C:\laragon\www\FinalProject\app\config\config.php on line 4
+[2025-12-20 23:35:58] Starting Deadline Reminder Script (H-1 & Hari H)...
+Checking for deadlines on: 2025-12-20 (Hari H) and 2025-12-21 (H-1)
+Found 0 task(s) to process.
+
+No reminders to send. Exiting.
+ 
+Completed at: Sat 12/20/2025 23:35:58.36 
+ 

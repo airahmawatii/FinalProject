@@ -13,10 +13,10 @@ class Database {
         $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->safeLoad();
 
-        $this->host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+        $this->host = $_ENV['DB_HOST'] ?? '';
         $this->port = $_ENV['DB_PORT'] ?? '3306';
-        $this->db_name = $_ENV['DB_DATABASE'] ?? 'fp';
-        $this->username = $_ENV['DB_USERNAME'] ?? 'root';
+        $this->db_name = $_ENV['DB_DATABASE'] ?? '';
+        $this->username = $_ENV['DB_USERNAME'] ?? '';
         $this->password = $_ENV['DB_PASSWORD'] ?? '';
     }
 
