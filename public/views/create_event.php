@@ -7,8 +7,11 @@ require_once __DIR__ . '/../app/Services/GoogleTokenService.php';
 
 use App\Services\CalendarService;
 
-session_start();
-if (!isset($_SESSION['user'])) { header("Location: ../index.php?page=login"); exit; }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../app/config/config.php';
+if (!isset($_SESSION['user'])) { header("Location: " . BASE_URL . "/index.php?page=login"); exit; }
 $user = $_SESSION['user'];
 if ($user['role'] !== 'dosen' && $user['role'] !== 'admin') { die("Akses ditolak"); }
 

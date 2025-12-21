@@ -1,7 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../app/config/config.php';
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: ../auth/login_view.php");
+    header("Location: " . BASE_URL . "/index.php?page=login");
     exit;
 }
 

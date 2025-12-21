@@ -26,13 +26,13 @@ class AuthController
                 $_SESSION['flash_message'] = "Selamat datang kembali, " . $user['nama'] . "!";
 
                 if ($user['role'] === 'admin') {
-                    header("Location: /FinalProject/public/views/admin/dashboard_admin.php");
+                    header("Location: " . BASE_URL . "/views/admin/dashboard_admin.php");
                     exit;
                 } elseif ($user['role'] === 'dosen') {
-                    header("Location: /FinalProject/public/views/dosen/dashboard.php");
+                    header("Location: " . BASE_URL . "/views/dosen/dashboard.php");
                     exit;
                 } else {
-                    header("Location: /FinalProject/public/views/mahasiswa/dashboard_mahasiswa.php");
+                    header("Location: " . BASE_URL . "/views/mahasiswa/dashboard_mahasiswa.php");
                     exit;
                 }
             } else {
@@ -130,7 +130,7 @@ class AuthController
                 // Check verification status
                 if ($user['status'] === 'pending') {
                     $_SESSION['user'] = $user; // Create session to show name if needed
-                    header("Location: /FinalProject/public/views/auth/pending.php");
+                    header("Location: " . BASE_URL . "/views/auth/pending.php");
                     exit;
                 }
 
@@ -139,11 +139,11 @@ class AuthController
                 $_SESSION['flash_message'] = "Login Google Berhasil! Hai, " . $user['nama'];
 
                 if ($user['role'] === 'admin') {
-                    header("Location: /FinalProject/public/views/admin/dashboard_admin.php");
+                    header("Location: " . BASE_URL . "/views/admin/dashboard_admin.php");
                 } elseif ($user['role'] === 'dosen') {
-                    header("Location: /FinalProject/public/views/dosen/dashboard.php");
+                    header("Location: " . BASE_URL . "/views/dosen/dashboard.php");
                 } else {
-                    header("Location: /FinalProject/public/views/mahasiswa/dashboard_mahasiswa.php");
+                    header("Location: " . BASE_URL . "/views/mahasiswa/dashboard_mahasiswa.php");
                 }
                 exit;
             } catch (Exception $e) {
