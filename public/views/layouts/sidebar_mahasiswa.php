@@ -6,11 +6,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <!-- Header Logo -->
     <div class="h-20 flex items-center px-6 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
         <div class="flex items-center gap-3">
-             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/20">
-                <span class="text-2xl">🎓</span>
+             <div class="w-10 h-10 bg-white p-1 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/20 overflow-hidden">
+                <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
             </div>
             <div class="flex flex-col">
-                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademy</h2>
+                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademia</h2>
                 <p class="text-cyan-400 text-[9px] font-extrabold uppercase tracking-[0.2em]">Mahasiswa</p>
             </div>
         </div>
@@ -21,13 +21,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
         
         <p class="text-[10px] font-bold text-slate-500 px-4 mb-2 uppercase tracking-widest">Menu Utama</p>
         
-        <a href="/FinalProject/public/views/mahasiswa/dashboard_mahasiswa.php" 
+        <a href="<?= BASE_URL ?>/views/mahasiswa/dashboard_mahasiswa.php" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'dashboard_mahasiswa.php' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-600/40 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
             <span class="text-lg group-hover:scale-110 transition">🏠</span>
             <span class="text-sm">Dashboard</span>
         </a>
         
-        <a href="daftar_tugas.php" 
+        <a href="<?= BASE_URL ?>/views/mahasiswa/daftar_tugas.php" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'daftar_tugas.php' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-600/40 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
             <span class="text-lg group-hover:scale-110 transition">⚡</span>
             <span class="text-sm">Daftar Tugas</span>
@@ -35,7 +35,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-2 uppercase tracking-widest">Akun</p>
 
-        <a href="/FinalProject/public/views/mahasiswa/profile.php" 
+        <a href="<?= BASE_URL ?>/views/mahasiswa/profile.php" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'profile.php' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-600/40 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
             <span class="text-lg group-hover:scale-110 transition">👤</span>
             <span class="text-sm">Profil Saya</span>
@@ -57,7 +57,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </div>
             </div>
         </div>
-        <a href="/FinalProject/public/logout.php" class="flex items-center justify-center gap-2 w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 rounded-xl text-xs font-bold transition shadow-lg">
+        <a href="<?= BASE_URL ?>/logout.php" class="flex items-center justify-center gap-2 w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 rounded-xl text-xs font-bold transition shadow-lg">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             Sign Out
         </a>
@@ -70,8 +70,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
     </button>
     <div class="flex items-center gap-2">
-         <div class="bg-white/10 p-1.5 rounded-lg border border-white/10">
-             <span class="text-xl">🎓</span>
+         <div class="bg-white p-1 rounded-lg border border-white/20 w-8 h-8 overflow-hidden">
+             <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
          </div>
          <span class="font-bold text-white tracking-tight">TaskAcademia</span>
     </div>

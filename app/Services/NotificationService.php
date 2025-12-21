@@ -18,17 +18,44 @@ class NotificationService
 
     private function setupMailer()
     {
+        // Ensure Env is loaded if not already
+        if (empty($_ENV['SMTP_HOST'])) {
+            $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+            $dotenv->safeLoad();
+        }
+
         $this->mail = new PHPMailer(true);
-        // Server settings
-        $this->mail->isSMTP();
-        $this->mail->Host       = $_ENV['SMTP_HOST'];
-        $this->mail->SMTPAuth   = true;
-        $this->mail->Username   = $_ENV['SMTP_USER'];
-        $this->mail->Password   = $_ENV['SMTP_PASS'];
-        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
-        $this->mail->Port       = $_ENV['SMTP_PORT'];
-        $this->mail->setFrom($_ENV['SMTP_USER'], $_ENV['SMTP_FROM_NAME'] ?? 'TaskAcademia Notifier');
-        $this->mail->isHTML(true);
+        
+        try {
+            // Server settings
+            $this->mail->isSMTP();
+            $this->mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com';
+            $this->mail->SMTPAuth   = true;
+            $this->mail->Username   = $_ENV['SMTP_USER'] ?? '';
+            $this->mail->Password   = $_ENV['SMTP_PASS'] ?? '';
+            
+            // Auto-detect encryption based on port
+            $port = (int)($_ENV['SMTP_PORT'] ?? 587);
+            $this->mail->Port = $port;
+            
+            if ($port === 465) {
+                $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            } else {
+                $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            }
+
+            $fromEmail = $_ENV['SMTP_USER'] ?? 'noreply@taskacademia.com';
+            $fromName  = $_ENV['SMTP_FROM_NAME'] ?? 'TaskAcademia Notifier';
+            
+            $this->mail->setFrom($fromEmail, $fromName);
+            $this->mail->isHTML(true);
+            $this->mail->CharSet = 'UTF-8';
+            
+            // Timeout settings for hosting stability
+            $this->mail->Timeout = 30;
+        } catch (Exception $e) {
+            error_log("Mailer Setup Error: " . $e->getMessage());
+        }
     }
 
     /**

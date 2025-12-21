@@ -138,17 +138,33 @@ $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
                     <!-- Profile Dropdown -->
                     <div class="relative group">
-                        <a href="profile.php" class="glass pl-2 pr-4 py-1.5 rounded-full flex items-center gap-3 text-left hover:bg-white/20 transition shadow-lg border border-white/10 ring-2 ring-blue-500/20">
+                        <button class="glass pl-2 pr-4 py-1.5 rounded-full flex items-center gap-3 text-left hover:bg-white/20 transition shadow-lg border border-white/10 ring-2 ring-blue-500/20">
                             <div class="w-10 h-10 rounded-full p-[2px] bg-gradient-to-br from-blue-400 to-indigo-600 shadow-inner">
-                                <img src="<?= $photoUrl ?>" 
-                                     alt="Profile" class="w-full h-full rounded-full object-cover border-2 border-white/20">
+                                <img src="<?= $photoUrl ?>" alt="Profile" class="w-full h-full rounded-full object-cover border-2 border-white/20">
                             </div>
                             <div class="hidden md:block text-right">
                                 <p class="text-sm font-bold text-white leading-none"><?= htmlspecialchars(explode(' ', $user['nama'])[0]) ?></p>
                                 <p class="text-[10px] text-blue-200 uppercase font-semibold tracking-wider mt-0.5"><?= $user['role'] ?></p>
                             </div>
-                            <svg class="w-4 h-4 text-blue-200 hidden md:block group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </a>
+                            <svg class="w-4 h-4 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div class="absolute right-0 top-full mt-2 w-48 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
+                            <div class="glass rounded-2xl p-2 shadow-2xl border border-white/20 overflow-hidden bg-slate-900/90 backdrop-blur-xl">
+                                <a href="profile.php" 
+                                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-100 hover:bg-blue-500/20 hover:text-white transition-all font-bold text-xs uppercase tracking-wider group/profile">
+                                    <span class="text-lg group-hover/profile:scale-110 transition-transform">👤</span>
+                                    Profile
+                                </a>
+                                <div class="border-t border-white/10 my-1"></div>
+                                <a href="/FinalProject/public/logout.php" 
+                                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-100 hover:bg-red-500/20 hover:text-white transition-all font-bold text-xs uppercase tracking-wider group/logout">
+                                    <span class="text-lg group-hover/logout:rotate-12 transition-transform">🚪</span>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>

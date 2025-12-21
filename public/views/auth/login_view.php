@@ -1,4 +1,7 @@
-<?php require_once __DIR__ . '/../../../app/config/db_init.php'; ?>
+<?php 
+require_once __DIR__ . '/../../../app/config/config.php';
+require_once __DIR__ . '/../../../app/config/db_init.php'; 
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,7 +42,7 @@
         <div class="text-white text-center lg:text-left space-y-6 order-1 lg:order-none">
             <div class="inline-flex items-center gap-3 mb-4 lg:mb-0">
                 <div class="bg-white/90 p-1.5 rounded-xl shadow-lg shadow-blue-500/20">
-                    <img src="/FinalProject/public/assets/images/logo.png" class="h-10 w-auto">
+                    <img src="<?= BASE_URL ?>/assets/img/logo.jpg" class="h-10 w-auto">
                 </div>
             </div>
 
@@ -78,14 +81,14 @@
                 <div class="mb-8 text-center text-white">
                     <div class="flex justify-center mb-6">
                         <div class="bg-white/90 p-2 rounded-2xl shadow-lg shadow-blue-500/20">
-                            <img src="/FinalProject/public/assets/images/logo.png" alt="TaskAcademia" class="h-14 w-auto">
+                            <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="TaskAcademia" class="h-14 w-auto">
                         </div>
                     </div>
                     <h2 class="text-2xl font-bold mb-2 text-white">Selamat Datang! 👋</h2>
                     <p class="text-slate-300 text-sm font-medium">Masuk untuk mengelola tugas akademikmu.</p>
                 </div>
 
-                <form method="POST" action="/FinalProject/public/index.php" class="space-y-5">
+                <form method="POST" action="<?= BASE_URL ?>/index.php" class="space-y-5">
                     <input type="hidden" name="action" value="login">
                     
                     <div>

@@ -1,14 +1,11 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
-    header("Location: " . BASE_URL . "/index.php");
+    header("Location: /FinalProject/public/index.php");
     exit;
 }
 
 require_once __DIR__ . '/../../../app/config/config.php';
-
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/TaskModel.php';
 require_once __DIR__ . '/../../../app/Models/CourseModel.php';
@@ -38,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($taskModel->update($id, $title, $desc, $deadline, $course_id)) {
         $success = "Tugas berhasil diperbarui!";
-        // Refresh local data
         $task = $taskModel->find($id);
     } else {
         $error = "Gagal memperbarui tugas.";
@@ -46,102 +42,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Tugas | TaskAcademia</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Outfit', sans-serif; }
         .glass {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
-        .sidebar { background: rgba(15, 23, 42, 0.95); }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex items-center justify-center p-6 text-gray-800">
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen flex text-white font-outfit">
 
-    <!-- Background Orbs -->
-    <div class="fixed inset-0 pointer-events-none z-0">
-         <div class="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
-         <div class="absolute bottom-[20%] left-[10%] w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] mix-blend-screen"></div>
-    </div>
+    <!-- Include Shared Sidebar -->
+    <?php include __DIR__ . '/../layouts/sidebar_dosen.php'; ?>
 
-    <div class="w-full max-w-3xl glass rounded-3xl p-8 md:p-10 shadow-2xl relative z-10 my-10">
-        
-        <!-- Header with Back Button (Same as prodi_edit.php) -->
-        <div class="mb-8">
-            <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-2 transition text-sm font-semibold group">
-                 <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                 Kembali
-            </a>
-            <div class="flex justify-between items-center">
-                <h1 class="text-3xl font-bold text-white">Edit Tugas</h1>
-            </div>
-            <p class="text-blue-200 text-sm mt-1">Perbarui detail tugas mahasiswa.</p>
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 relative overflow-y-auto w-full md:w-auto min-h-screen transition-all duration-300 md:ml-20">
+        <!-- Background Orbs -->
+        <div class="fixed inset-0 pointer-events-none z-0">
+             <div class="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen"></div>
+             <div class="absolute bottom-[20%] left-[10%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
         </div>
 
-        <?php if ($success): ?>
-            <script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: '<?= $success ?>',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    window.location.href = 'daftar_tugas.php';
-                });
-            </script>
-        <?php endif; ?>
-
-        <?php if ($error): ?>
-            <div class="bg-red-100 text-red-700 p-4 rounded-xl mb-6 font-semibold"><?= $error ?></div>
-        <?php endif; ?>
-
-        <form method="POST" class="space-y-6">
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Mata Kuliah</label>
-                <select name="course_id" class="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-                    <?php foreach($courses as $c): ?>
-                        <option value="<?= $c['id'] ?>" <?= $c['id']==$task['course_id']? 'selected':'' ?>><?= htmlspecialchars($c['name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
-                <input type="text" name="title" value="<?= htmlspecialchars($task['task_title']) ?>" required
-                       class="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-semibold text-gray-800">
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Deskripsi</label>
-                <textarea name="description" rows="5"
-                          class="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"><?= htmlspecialchars($task['description']) ?></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Deadline</label>
-                <input type="datetime-local" name="deadline" value="<?= str_replace(' ', 'T', substr($task['deadline'],0,16)) ?>"
-                       class="w-full px-5 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-            </div>
-
-            <div class="pt-6 flex gap-4">
-                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition transform hover:-translate-y-1">
-                    Simpan Perubahan
-                </button>
-                <a href="daftar_tugas.php" class="px-8 py-4 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition bg-white/50">
-                    Batal
+        <div class="p-6 md:p-10 relative z-10 max-w-4xl mx-auto pt-20 md:pt-10">
+            <!-- Header section -->
+            <div class="mb-10">
+                <a href="daftar_tugas.php" class="inline-flex items-center gap-2 text-blue-200/50 hover:text-white mb-4 transition text-xs font-extrabold uppercase tracking-widest group">
+                     <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                     Batal & Kembali
                 </a>
+                <h1 class="text-3xl font-bold mb-2">Edit Tugas ✏️</h1>
+                <p class="text-blue-200">Perbarui rincian tugas untuk mahasiswa Anda.</p>
             </div>
 
-        </form>    </div>
+            <?php if ($success): ?>
+                <script>
+                    Swal.fire({
+                        icon: 'success', title: 'Berhasil!', text: '<?= $success ?>', showConfirmButton: false, timer: 1500
+                    }).then(() => window.location.href = 'daftar_tugas.php');
+                </script>
+            <?php endif; ?>
+            <?php if ($error): ?>
+                <script>Swal.fire({ icon: 'error', title: 'Gagal', text: '<?= $error ?>' });</script>
+            <?php endif; ?>
 
+            <div class="glass rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                <form method="POST" class="p-8 md:p-12 space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Mata Kuliah</label>
+                            <div class="relative group">
+                                <select name="course_id" required class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white bg-slate-900/40 border-white/10 appearance-none cursor-pointer font-bold transition-all">
+                                    <?php foreach($courses as $c): ?>
+                                        <option value="<?= $c['id'] ?>" <?= $c['id']==$task['course_id']? 'selected':'' ?> class="bg-slate-900"><?= htmlspecialchars($c['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-6 flex items-center pointer-events-none text-blue-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Deadline</label>
+                            <input type="datetime-local" name="deadline" value="<?= str_replace(' ', 'T', substr($task['deadline'],0,16)) ?>" required class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-bold transition-all">
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Judul Tugas</label>
+                        <input type="text" name="title" value="<?= htmlspecialchars($task['task_title']) ?>" required class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-bold transition-all">
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Deskripsi</label>
+                        <textarea name="description" rows="6" class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-medium transition-all"><?= htmlspecialchars($task['description']) ?></textarea>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-5 pt-10">
+                        <button type="submit" class="relative group flex-1">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+                            <div class="relative flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-5 rounded-2xl font-black text-lg transition-all border border-white/20 active:scale-[0.98]">
+                                <span class="text-2xl group-hover:rotate-12 transition-transform">💾</span>
+                                <span>Perbarui Tugas</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="window.history.back()" class="px-12 py-5 rounded-2xl glass text-blue-200 hover:bg-white/10 hover:text-white font-bold transition-all flex items-center justify-center border border-white/10 text-base">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

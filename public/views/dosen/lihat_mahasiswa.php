@@ -1,222 +1,167 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
-    header("Location: " . BASE_URL . "/index.php");
+    header("Location: /FinalProject/public/index.php");
     exit;
 }
 
 require_once __DIR__ . '/../../../app/config/config.php';
-
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/CourseModel.php';
-require_once __DIR__ . '/../../../app/Models/EnrollmentModel.php';
 
 $db = new Database();
 $pdo = $db->connect();
-$courseModel = new CourseModel($pdo);
-$enrollModel = new EnrollmentModel($pdo);
 
-$courses = $courseModel->getByDosen($_SESSION['user']['id']);
-$selected_course = $_GET['course_id'] ?? ($courses[0]['id'] ?? null);
+$dosen_id = $_SESSION['user']['id'];
 
-// Verify Dosen owns this course
-$is_owner = false;
-foreach($courses as $c) { if($c['id'] == $selected_course) $is_owner = true; }
-
-if ($selected_course && !$is_owner) {
-    die("Akses ditolak: Anda tidak mengajar mata kuliah ini.");
-}
-
-$success_msg = "";
-$error_msg = "";
-
-// Handle Actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $selected_course) {
-    if (isset($_POST['enroll_student'])) {
-        if ($enrollModel->enrollStudentToCourse($_POST['student_id'], $selected_course)) {
-            $success_msg = "Mahasiswa berhasil ditambahkan.";
-        } else {
-            $error_msg = "Gagal menambahkan (Mungkin sudah terdaftar).";
-        }
-    } elseif (isset($_POST['enroll_class'])) {
-        $count = $enrollModel->enrollClassToCourse($_POST['class_id'], $selected_course);
-        if ($count > 0) $success_msg = "Berhasil menambahkan $count mahasiswa.";
-        else $success_msg = "Semua mahasiswa dikelas ini sudah terdaftar.";
-    } elseif (isset($_POST['unenroll_student'])) {
-        if ($enrollModel->unenrollStudentFromCourse($_POST['student_id'], $selected_course)) {
-            $success_msg = "Mahasiswa berhasil dihapus.";
-        } else {
-            $error_msg = "Gagal menghapus data.";
-        }
-    }
-}
-
-$students = $selected_course ? $enrollModel->getStudentsByCourse($selected_course) : [];
-
-// Data for Dropdowns
-$all_students = $pdo->query("SELECT id, nama FROM users WHERE role='mahasiswa' ORDER BY nama")->fetchAll(PDO::FETCH_ASSOC);
-$all_classes = $pdo->query("SELECT id_kelas, nama_kelas FROM class ORDER BY nama_kelas")->fetchAll(PDO::FETCH_ASSOC);
+// Get students enrolled in courses taught by this dosen
+$sql = "
+    SELECT DISTINCT u.nama, m.nim, u.email, a.tahun as angkatan
+    FROM users u
+    JOIN enrollments e ON u.id = e.student_id
+    JOIN courses co ON e.course_id = co.id
+    JOIN dosen_courses dc ON dc.matkul_id = co.id
+    LEFT JOIN mahasiswa m ON u.id = m.user_id
+    LEFT JOIN angkatan a ON m.angkatan_id = a.id_angkatan
+    WHERE dc.dosen_id = :dosen_id AND u.role = 'mahasiswa'
+    ORDER BY u.nama ASC
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['dosen_id' => $dosen_id]);
+$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Lihat Mahasiswa | Dosen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Mahasiswa | TaskAcademia</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Outfit', sans-serif; }
         .glass {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
-        .sidebar { background: rgba(15, 23, 42, 0.95); }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex items-center justify-center p-6 text-gray-800">
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen flex text-white font-outfit">
 
-    <!-- Background Orbs -->
-    <div class="fixed inset-0 pointer-events-none z-0">
-         <div class="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
-         <div class="absolute bottom-[20%] left-[10%] w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] mix-blend-screen"></div>
-    </div>
+    <!-- Include Shared Sidebar -->
+    <?php include __DIR__ . '/../layouts/sidebar_dosen.php'; ?>
 
-    <div class="w-full max-w-7xl glass rounded-3xl p-8 md:p-10 shadow-2xl relative z-10 my-10">
-        
-        <!-- Header with Back Button (Same as prodi_edit.php) -->
-        <div class="mb-8">
-            <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-2 transition text-sm font-semibold group">
-                 <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                 Kembali
-            </a>
-            <div class="flex justify-between items-center">
-                <h1 class="text-3xl font-bold text-black">Daftar Mahasiswa</h1>
-            </div>
-            <p class="text-blue-200 text-sm mt-1">Lihat mahasiswa yang terdaftar di kelas Anda.</p>
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 relative overflow-y-auto w-full md:w-auto min-h-screen transition-all duration-300 md:ml-20">
+        <!-- Background Orbs -->
+        <div class="fixed inset-0 pointer-events-none z-0">
+             <div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen"></div>
+             <div class="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
         </div>
 
-        <!-- Filter Form -->
-        <form method="GET" class="mb-8 flex flex-col md:flex-row items-start md:items-center gap-4 bg-white/50 p-6 rounded-2xl border border-white/40">
-            <label class="font-bold text-gray-800 whitespace-nowrap">Pilih Kelas:</label>
-            <div class="relative flex-1 max-w-md w-full">
-                <select name="course_id" onchange="this.form.submit()" class="w-full px-5 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-semibold text-gray-700 shadow-sm">
-                    <?php foreach($courses as $c): ?>
-                        <option value="<?= $c['id'] ?>" <?= $selected_course == $c['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($c['name']) ?> (Semester <?= $c['semester'] ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        <div class="p-6 md:p-10 relative z-10 max-w-7xl mx-auto pt-20 md:pt-10">
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                <div>
+                     <h1 class="text-3xl md:text-3xl font-bold mb-2 text-white">Data Mahasiswa 👥</h1>
+                     <p class="text-blue-200">Daftar mahasiswa yang terdaftar di kelas-kelas Anda.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Online Badge -->
+                    <div class="glass px-4 py-2 rounded-full flex items-center gap-2 text-sm text-blue-900 font-bold bg-white/80 backdrop-blur-sm hidden md:flex">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online
+                    </div>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative group">
+                        <button class="glass pl-2 pr-4 py-1.5 rounded-full flex items-center gap-3 text-left hover:bg-white/20 transition shadow-lg border border-white/10 ring-2 ring-blue-500/20">
+                            <div class="w-10 h-10 rounded-full p-[2px] bg-gradient-to-br from-blue-400 to-indigo-600 shadow-inner">
+                                <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user']['nama']) ?>&background=2563eb&color=fff&bold=true" 
+                                     alt="Profile" class="w-full h-full rounded-full object-cover border-2 border-white/20">
+                            </div>
+                            <div class="hidden md:block text-right">
+                                <p class="text-sm font-bold text-white leading-none"><?= htmlspecialchars(explode(' ', $_SESSION['user']['nama'])[0]) ?></p>
+                                <p class="text-[10px] text-blue-200 uppercase font-semibold tracking-wider mt-0.5"><?= $_SESSION['user']['role'] ?></p>
+                            </div>
+                            <svg class="w-4 h-4 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div class="absolute right-0 top-full mt-2 w-48 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
+                            <div class="glass rounded-2xl p-2 shadow-2xl border border-white/20 overflow-hidden bg-slate-900/90 backdrop-blur-xl">
+                                <a href="profile.php" 
+                                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-100 hover:bg-blue-500/20 hover:text-white transition-all font-bold text-xs uppercase tracking-wider group/profile">
+                                    <span class="text-lg group-hover/profile:scale-110 transition-transform">👤</span>
+                                    Profile
+                                </a>
+                                <a href="../../logout.php" 
+                                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-100 hover:bg-red-500/20 hover:text-white transition-all font-bold text-xs uppercase tracking-wider group/logout">
+                                    <span class="text-lg group-hover/logout:rotate-12 transition-transform">🚪</span>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="glass rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                <?php if (empty($students)): ?>
+                    <div class="text-center py-20">
+                        <div class="text-7xl mb-6 opacity-20">👥</div>
+                        <h3 class="text-2xl font-bold text-white opacity-40">Belum ada mahasiswa</h3>
+                        <p class="text-blue-200 mt-2 opacity-30">Belum ada mahasiswa yang mengambil mata kuliah Anda.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-white/5 text-blue-300 uppercase text-[10px] tracking-[0.2em] font-extrabold border-b border-white/10">
+                                    <th class="py-6 px-8">Nama Mahasiswa</th>
+                                    <th class="py-6 px-8">NIM</th>
+                                    <th class="py-6 px-8">Email</th>
+                                    <th class="py-6 px-8 text-center">Angkatan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-blue-100 text-sm font-medium">
+                                <?php foreach ($students as $s): ?>
+                                <tr class="border-b border-white/[0.03] hover:bg-white/[0.05] transition-all group">
+                                    <td class="py-5 px-8">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold group-hover:scale-110 transition-transform shadow-inner">
+                                                <?= strtoupper(substr($s['nama'], 0, 1)) ?>
+                                            </div>
+                                            <span class="font-bold text-white group-hover:text-blue-300 transition-colors text-base"><?= htmlspecialchars($s['nama']) ?></span>
+                                        </div>
+                                    </td>
+                                    <td class="py-5 px-8 text-slate-400 font-mono text-xs"><?= htmlspecialchars($s['nim'] ?? '-') ?></td>
+                                    <td class="py-5 px-8 text-slate-400 lowercase"><?= htmlspecialchars($s['email']) ?></td>
+                                    <td class="py-5 px-8 text-center">
+                                        <span class="bg-blue-500/10 text-blue-300 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/20">
+                                            <?= htmlspecialchars($s['angkatan'] ?? '-') ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($students)): ?>
+            <div class="mt-8 flex justify-end">
+                <div class="bg-blue-500/10 border border-blue-500/20 px-6 py-3 rounded-2xl">
+                    <span class="text-[10px] text-blue-300 uppercase font-extrabold tracking-widest mr-3 opacity-60">Total Mahasiswa:</span>
+                    <span class="text-2xl font-black text-white"><?= count($students) ?></span>
                 </div>
             </div>
-        </form>
-
-        <!-- Notification -->
-        <?php if ($success_msg): ?>
-            <div class="bg-green-100 text-green-700 p-4 rounded-xl mb-6 shadow-sm flex items-center gap-2">
-                <span>✅</span> <?= $success_msg ?>
-            </div>
-        <?php endif; ?>
-        <?php if ($error_msg): ?>
-            <div class="bg-red-100 text-red-700 p-4 rounded-xl mb-6 shadow-sm flex items-center gap-2">
-                <span>⚠️</span> <?= $error_msg ?>
-            </div>
-        <?php endif; ?>
-
-        <!-- Management Tools -->
-        <?php if($selected_course): ?>
-        <div class="mb-8 p-6 bg-blue-50/80 rounded-2xl border border-blue-100 shadow-inner">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                <h3 class="font-bold text-gray-800 flex items-center gap-2 text-lg">
-                    <span>👥</span> Kelola Peserta
-                </h3>
-                <a href="export_students_pdf.php?course_id=<?= $selected_course ?>" target="_blank"
-                   class="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center gap-2 text-sm w-full md:w-auto justify-center">
-                    <span>📄</span> Rekap PDF
-                </a>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Add Single -->
-                <form method="POST" class="flex gap-2">
-                    <input type="hidden" name="enroll_student" value="1">
-                    <select name="student_id" required class="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">+ Tambah Satu Mahasiswa</option>
-                        <?php foreach($all_students as $s): ?>
-                            <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nama']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button class="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 px-6 py-3 rounded-xl font-bold transition shadow-sm">
-                        Tambah
-                    </button>
-                </form>
-                <!-- Bulk Class -->
-                <form method="POST" class="flex gap-2">
-                    <input type="hidden" name="enroll_class" value="1">
-                    <select name="class_id" required class="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">+ Tambah Satu Kelas (Bulk)</option>
-                        <?php foreach($all_classes as $c): ?>
-                            <option value="<?= $c['id_kelas'] ?>"><?= htmlspecialchars($c['nama_kelas']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition">
-                        Import
-                    </button>
-                </form>
-            </div>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
-
-        <!-- Student List Table -->
-        <?php if(empty($students)): ?>
-            <div class="text-center py-16 text-gray-500 bg-white/50 rounded-2xl border border-dashed border-gray-300">
-                <p class="text-xl font-semibold">Belum ada mahasiswa di kelas ini.</p>
-                <p class="text-sm mt-2">Silakan tambahkan mahasiswa menggunakan form di atas.</p>
-            </div>
-        <?php else: ?>
-            <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm bg-white">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-4 px-6 font-bold">No</th>
-                            <th class="py-4 px-6 font-bold">Nama Mahasiswa</th>
-                            <th class="py-4 px-6 font-bold">Email</th>
-                            <th class="py-4 px-6 font-bold text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600 text-sm font-medium">
-                        <?php foreach($students as $idx => $s): ?>
-                            <tr class="border-b border-gray-100 hover:bg-blue-50 transition">
-                                <td class="py-4 px-6"><?= $idx + 1 ?></td>
-                                <td class="py-4 px-6 flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                                        <?= strtoupper(substr($s['name'], 0, 1)) ?>
-                                    </div>
-                                    <span class="font-bold text-gray-800"><?= htmlspecialchars($s['name']) ?></span>
-                                </td>
-                                <td class="py-4 px-6"><?= htmlspecialchars($s['email']) ?></td>
-                                <td class="py-4 px-6 text-center">
-                                    <form method="POST" onsubmit="return confirm('Hapus <?= addslashes($s['name']) ?> dari kelas ini?');">
-                                        <input type="hidden" name="unenroll_student" value="1">
-                                        <input type="hidden" name="student_id" value="<?= $s['id'] ?>">
-                                        <button class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="Hapus">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-4 text-right text-sm text-gray-100 font-semibold bg-blue-900/40 inline-block px-4 py-2 rounded-lg float-right">
-                Total: <?= count($students) ?> Mahasiswa
-            </div>
-        <?php endif; ?>
-
-    </div></body>
+    </main>
+</body>
 </html>

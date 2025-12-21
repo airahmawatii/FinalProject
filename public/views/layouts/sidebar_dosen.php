@@ -9,7 +9,7 @@ if (!function_exists('isActive')) {
 }
 ?>
 <!-- Mobile Menu Button -->
-<button id="mobile-menu-btn" class="fixed top-4 left-4 z-[60] p-3 bg-[#543abb] rounded-xl text-white md:hidden shadow-lg transition-all active:scale-95 border border-white/20">
+<button id="mobile-menu-btn" class="fixed top-4 left-4 z-[60] p-3 bg-slate-900/90 backdrop-blur-md rounded-xl text-white md:hidden shadow-lg transition-all active:scale-95 border border-white/10">
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
 </button>
 
@@ -17,23 +17,22 @@ if (!function_exists('isActive')) {
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
 
 <!-- Sidebar -->
-<!-- Style disamakan dengan Admin: bg-[#3e2b85] -->
-<aside id="sidebar" class="fixed inset-y-0 left-0 w-20 md:w-20 sidebar flex flex-col z-50 transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out bg-[#3e2b85] text-white group collapsed shadow-2xl">
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-20 md:w-20 sidebar flex flex-col z-50 transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out bg-slate-900/95 backdrop-blur-xl text-white group collapsed shadow-2xl border-r border-white/10">
     
     <!-- Branding / Header -->
     <div class="p-6 flex items-center justify-center h-24 border-b border-white/10 relative">
         <div class="flex items-center gap-3 overflow-hidden whitespace-nowrap transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
-                 <img src="<?= BASE_URL ?>/assets/img/logo_task_academia.jpg" alt="Logo" class="w-full h-full object-cover">
+            <div class="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
+                 <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
             </div>
             <div class="sidebar-text transition-all duration-300 opacity-100 group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 group-[.collapsed]:invisible">
-                <h2 class="text-lg font-bold text-white tracking-tight">TaskAcademia</h2>
-                <p class="text-[10px] uppercase text-indigo-200 tracking-wider">Lecturer Panel</p>
+                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 tracking-tight">TaskAcademia</h2>
+                <p class="text-[9px] uppercase text-blue-400 font-extrabold tracking-widest">Lecturer Panel</p>
             </div>
         </div>
         
         <!-- Desktop Toggle Button -->
-        <button id="desktop-toggle-btn" class="hidden md:flex absolute -right-3 top-9 bg-white text-[#3e2b85] w-6 h-6 items-center justify-center rounded-full shadow-md hover:bg-gray-100 transition-all z-50 border border-gray-100 transform active:scale-95 group/btn">
+        <button id="desktop-toggle-btn" class="hidden md:flex absolute -right-3 top-9 bg-slate-800 text-white w-6 h-6 items-center justify-center rounded-full shadow-md hover:bg-slate-700 transition-all z-50 border border-white/10 transform active:scale-95 group/btn">
             <svg class="w-4 h-4 transition-transform duration-500 transform group-[.collapsed]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
         </button>
 
@@ -52,11 +51,9 @@ if (!function_exists('isActive')) {
             ['url' => BASE_URL . '/views/dosen/buat_tugas.php', 'icon' => '➕', 'label' => 'Buat Tugas'],
             ['url' => BASE_URL . '/views/dosen/daftar_tugas.php', 'icon' => '📋', 'label' => 'Daftar Tugas'],
             ['url' => BASE_URL . '/views/dosen/lihat_mahasiswa.php', 'icon' => '👥', 'label' => 'Mahasiswa'],
-            ['url' => BASE_URL . '/views/dosen/profile.php', 'icon' => '👤', 'label' => 'Profil Saya'],
         ] as $item): 
             $isActive = $current_page == basename($item['url']);
-            // Style active/inactive disamakan dengan Admin
-            $activeClass = $isActive ? 'bg-[#543abb] text-white shadow-lg' : 'hover:bg-[#4a339b] text-indigo-100';
+            $activeClass = $isActive ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg border border-white/10' : 'hover:bg-white/5 text-slate-400 hover:text-white';
         ?>
             <a href="<?= $item['url'] ?>" class="flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group/link relative <?= $activeClass ?>">
                 <span class="text-xl min-w-[24px] text-center"><?= $item['icon'] ?></span>
@@ -66,28 +63,37 @@ if (!function_exists('isActive')) {
             </a>
         <?php endforeach; ?>
 
-        <!-- Logout -->
-        <a href="<?= BASE_URL ?>/logout.php" class="flex items-center gap-3 px-3 py-3 rounded-xl text-red-300 hover:bg-red-500/20 hover:text-red-100 font-medium transition mt-10 group/link relative">
-            <span class="text-xl min-w-[24px] text-center">🚪</span>
-            <span class="sidebar-text whitespace-nowrap transition-all duration-300 opacity-100 group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 overflow-hidden">Logout</span>
-             <!-- Tooltip -->
-            <div class="absolute left-14 bg-red-900 text-white text-xs px-2 py-1 rounded opacity-0 group-[.collapsed]:group-hover/link:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-red-700 whitespace-nowrap z-50">
-                Logout
-            </div>
-        </a>
 
-        <!-- Google Connect (Special case for Dosen) -->
-        <div class="mt-6 px-1 transition-all duration-300 group-[.collapsed]:hidden">
-            <div class="border-t border-white/10 my-4"></div>
+
+        <!-- Google Connect (Academic Sync) -->
+        <div class="mt-8 px-2 transition-all duration-300 group-[.collapsed]:scale-0 group-[.collapsed]:opacity-0">
+            <div class="h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent my-6"></div>
             <?php if (empty($_SESSION['user']['refresh_token'])): ?>
-                <a href="<?= BASE_URL ?>/views/dosen/dosen-connect-google.php" class="flex items-center gap-2 text-xs bg-white/10 hover:bg-white/20 text-indigo-100 px-3 py-2.5 rounded-xl transition-all border border-white/5 justify-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="w-4 h-4">
-                    <span>Hubungkan Google</span>
-                </a>
+                <div class="px-2">
+                    <p class="text-[9px] font-black text-blue-400/60 uppercase tracking-widest mb-3 ml-1">Academic Sync</p>
+                    <a href="<?= BASE_URL ?>/views/dosen/dosen-connect-google.php" 
+                       class="flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-4 py-3 rounded-2xl transition-all border border-white/5 group/gbtn shadow-lg">
+                        <div class="bg-white p-1.5 rounded-lg shrink-0 group-hover/gbtn:scale-110 transition-transform">
+                            <img src="https://www.gstatic.com/images/branding/product/1x/calendar_2020q4_48dp.png" alt="Google" class="w-4 h-4">
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold leading-tight">Hubungkan</span>
+                            <span class="text-[9px] text-blue-300/80 font-medium">Google Calendar</span>
+                        </div>
+                    </a>
+                </div>
             <?php else: ?>
-                <div class="flex items-center gap-2 text-xs text-green-300 bg-green-500/10 px-3 py-2.5 rounded-xl border border-green-500/20 w-full justify-center">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span>Google Terhubung</span>
+                <div class="px-2">
+                    <div class="flex items-center gap-3 bg-green-500/5 text-green-300 px-4 py-3 rounded-2xl border border-green-500/20 shadow-inner">
+                        <div class="relative">
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping absolute inset-0 opacity-40"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500 relative"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold leading-tight">Terhubung</span>
+                            <span class="text-[9px] text-green-400/60 font-medium tracking-tight">Sync Otomatis Aktif</span>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
@@ -209,8 +215,8 @@ if (!function_exists('isActive')) {
 <style>
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
     #main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     aside#sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 </style>

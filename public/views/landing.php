@@ -38,15 +38,15 @@
             <div class="flex items-center gap-3">
                 <!-- Logo with white rounded container for visibility -->
                 <div class="bg-white/90 p-1.5 rounded-xl shadow-lg shadow-blue-500/20">
-                     <img src="/FinalProject/public/assets/images/logo.png" alt="TaskAcademia" class="h-8 w-auto">
+                     <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="TaskAcademia" class="h-8 w-auto">
                 </div>
                 <span class="font-bold text-xl tracking-tight text-white/90">TaskAcademia</span>
             </div>
             <div class="flex items-center gap-6">
                 <a href="#features" class="hidden md:block text-sm font-semibold text-slate-300 hover:text-white transition">Fitur Utama</a>
-                <a href="/FinalProject/public/index.php?page=login" class="bg-white text-slate-900 hover:bg-blue-50 px-6 py-2.5 rounded-full font-bold transition shadow-lg shadow-white/10 text-sm flex items-center gap-2 transform hover:scale-105 active:scale-95">
+                <a href="<?= BASE_URL ?>/index.php?page=login" class="bg-white text-slate-900 hover:bg-blue-50 px-6 py-2.5 rounded-full font-bold transition shadow-lg shadow-white/10 text-sm flex items-center gap-2 transform hover:scale-105 active:scale-95">
                     Login
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 </a>
             </div>
         </div>
@@ -72,7 +72,7 @@
             </p>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <a href="/FinalProject/public/index.php?page=login" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transition transform hover:-translate-y-1 flex justify-center items-center gap-2 border border-blue-400/20">
+                <a href="<?= BASE_URL ?>/index.php?page=login" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transition transform hover:-translate-y-1 flex justify-center items-center gap-2 border border-blue-400/20">
                     <span>Mulai Sekarang</span> 🚀
                 </a>
                 <a href="#features" class="px-8 py-4 glass text-white rounded-2xl font-bold hover:bg-white/20 transition transform hover:-translate-y-1 flex justify-center items-center">

@@ -13,11 +13,11 @@ $prefix = $is_sub ? '../' : './';
     <!-- Header -->
     <div class="h-20 flex items-center px-6 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/20">
-                <span class="text-2xl">⚡</span>
+            <div class="w-10 h-10 bg-white p-1 rounded-xl shadow-lg shadow-blue-500/20 border border-white/20 overflow-hidden">
+                <img src="<?= (defined('BASE_URL') ? BASE_URL : '/FinalProject/public') ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
             </div>
             <div>
-                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademy</h2>
+                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademia</h2>
                 <p class="text-blue-400 text-[9px] font-extrabold uppercase tracking-[0.2em]">System Admin</p>
             </div>
         </div>
@@ -95,8 +95,8 @@ $prefix = $is_sub ? '../' : './';
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
     </button>
     <div class="flex items-center gap-2">
-         <div class="bg-blue-600/20 p-1.5 rounded-lg border border-blue-500/20">
-             <span class="text-xl">⚡</span>
+         <div class="bg-white p-1 rounded-lg border border-white/20 w-8 h-8 overflow-hidden">
+             <img src="<?= (defined('BASE_URL') ? BASE_URL : '/FinalProject/public') ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
          </div>
          <span class="font-bold text-white tracking-tight">TaskAcademia</span>
     </div>

@@ -161,4 +161,56 @@ class AnalyticsService
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Get Recommendations and Insights for Dosen
+     */
+    public function getRecommendations($dosen_id)
+    {
+        $recommendations = [];
+
+        // 1. Check for courses with NO tasks
+        $stmt = $this->pdo->prepare("
+            SELECT name FROM courses c
+            JOIN dosen_courses dc ON c.id = dc.matkul_id
+            WHERE dc.dosen_id = ? 
+            AND c.id NOT IN (SELECT course_id FROM tasks WHERE dosen_id = ?)
+        ");
+        $stmt->execute([$dosen_id, $dosen_id]);
+        $lazyCourses = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($lazyCourses as $course) {
+            $recommendations[] = [
+                'type' => 'warning',
+                'message' => "Mata kuliah '$course' belum memiliki tugas. Mahasiswa mungkin butuh latihan!"
+            ];
+        }
+
+        // 2. Check for upcoming deadlines (next 48 hours)
+        $stmt = $this->pdo->prepare("
+            SELECT t.task_title, c.name as course_name 
+            FROM tasks t
+            JOIN courses c ON t.course_id = c.id
+            WHERE t.dosen_id = ? 
+            AND t.deadline > NOW() 
+            AND t.deadline < DATE_ADD(NOW(), INTERVAL 48 HOUR)
+        ");
+        $stmt->execute([$dosen_id]);
+        $upcomingTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($upcomingTasks as $task) {
+            $recommendations[] = [
+                'type' => 'info',
+                'message' => "Tenggat waktu tugas '{$task['task_title']}' ({$task['course_name']}) akan segera berakhir dalam 48 jam."
+            ];
+        }
+
+        // 3. Overall health check
+        if (empty($recommendations)) {
+            $recommendations[] = [
+                'type' => 'success',
+                'message' => "Semua kelas terpantau aman dan terkelola dengan baik. Kerja bagus!"
+            ];
+        }
+
+        return $recommendations;
+    }
 }

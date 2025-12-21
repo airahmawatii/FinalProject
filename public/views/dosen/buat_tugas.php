@@ -1,30 +1,28 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
-    header("Location: " . BASE_URL . "/index.php");
+    header("Location: /FinalProject/public/index.php");
     exit;
 }
 
 require_once __DIR__ . '/../../../app/config/config.php';
-
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/CourseModel.php';
 require_once __DIR__ . '/../../../app/Models/TaskModel.php';
 require_once __DIR__ . '/../../../app/Models/EnrollmentModel.php';
+require_once __DIR__ . '/../../../app/Services/NotificationService.php';
 
 $db = new Database();
 $pdo = $db->connect();
 $courseModel = new CourseModel($pdo);
 $taskModel = new TaskModel($pdo);
 $enrollModel = new EnrollmentModel($pdo);
+
 $courses = $courseModel->getByDosen($_SESSION['user']['id']);
 $error = "";
 $success = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // ... (Keep existing logic unchanged) ...
     $course_id = $_POST['course_id'];
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
@@ -36,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $attachment = null;
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-             // ... (Keep file upload logic) ...
             $uploadDir = __DIR__ . '/../../uploads/tasks/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             $fileName = time() . '_' . $_FILES['attachment']['name'];
@@ -44,216 +41,210 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $attachment = $fileName;
             }
         }
+        
         if (!$error) {
-                if ($taskModel->create($_SESSION['user']['id'], $course_id, $title, $description, $deadline, $attachment)) {
-                    
-                    // --- START EMAIL NOTIFICATION LOGIC ---
-                    require_once __DIR__ . '/../../../app/Services/NotificationService.php';
-                    $notifier = new NotificationService($pdo);
-                    $senderName = $_SESSION['user']['nama'];
-                    
-                    // Get Course Name
-                    $courseName = "Mata Kuliah";
-                    foreach($courses as $c) {
-                        if ($c['id'] == $course_id) {
-                            $courseName = $c['name'];
-                            break;
-                        }
-                    }
+            if ($taskModel->create($_SESSION['user']['id'], $course_id, $title, $description, $deadline, $attachment)) {
+                
+                // NOTIFICATION LOGIC
+                $notifier = new NotificationService($pdo);
+                $senderName = $_SESSION['user']['nama'];
+                
+                // Fetch course info
+                $course = $courseModel->find($course_id);
+                $courseName = $course['name'] ?? 'Mata Kuliah';
 
-                    // Email Body Template
+                // Send to ALL STUDENTS enrolled
+                $students = $enrollModel->getStudentsByCourse($course_id);
+                $sentCount = 0;
+
+                if (!empty($students)) {
+                    // Restoring the preferred design
                     $deadlineTgl = date('d F Y', strtotime($deadline));
                     $deadlineJam = date('H:i', strtotime($deadline));
                     $attachmentHtml = $attachment ? "<p style='margin-top:10px; font-size:12px; color:#475569;'>📎 Ada Lampiran File</p>" : "";
 
                     $emailBody = "
-                        <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
-                            <!-- Header -->
-                            <div style='background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 40px 30px; text-align: center;'>
-                                <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>Tugas Baru 🚀</h1>
-                                <p style='color: #bfdbfe; margin-top: 5px; font-size: 16px; font-weight: bold;'>$courseName</p>
-                                <p style='color: #bfdbfe; margin-top: 0; font-size: 14px;'>$title</p>
-                            </div>
-
-                            <!-- Content -->
-                            <div style='padding: 30px; background: #ffffff;'>
-                                <p style='color: #334155; font-size: 16px; line-height: 1.6;'>
-                                    Halo Mahasiswa,<br>
-                                    <strong>$senderName</strong> baru saja memberikan tugas baru untuk mata kuliah <strong>$courseName</strong>.
-                                </p>
-
-                                <div style='background: #f8fafc; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin: 25px 0;'>
-                                    <p style='margin: 0 0 10px 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;'>Deadline</p>
-                                    <h2 style='margin: 0; color: #dc2626; font-size: 20px;'>$deadlineTgl</h2>
-                                    <p style='margin: 0; color: #dc2626; font-weight: bold;'>Pukul $deadlineJam WIB</p>
-                                    $attachmentHtml
+                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
+                        <div style='background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 40px 30px; text-align: center;'>
+                            <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>Tugas Baru 🚀</h1>
+                            <p style='color: #bfdbfe; margin-top: 5px; font-size: 14px;'>{$courseName}</p>
+                        </div>
+                        <div style='padding: 30px; background: #ffffff;'>
+                            <p style='color: #334155; font-size: 16px; line-height: 1.6;'>
+                                Halo Mahasiswa,<br>
+                                <strong>{$senderName}</strong> baru saja memberikan tugas baru yang perlu kamu selesaikan.
+                            </p>
+                            <div style='background: #f8fafc; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin: 25px 0;'>
+                                <h3 style='margin: 0 0 5px 0; color: #1e293b; font-size: 18px;'>{$title}</h3>
+                                <p style='margin: 0 0 15px 0; font-size: 14px; color: #64748b;'>{$courseName}</p>
+                                <div style='border-top: 1px dashed #cbd5e1; padding-top: 15px; margin-top: 15px;'>
+                                    <p style='margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;'>Deadline</p>
+                                    <h2 style='margin: 0; color: #dc2626; font-size: 20px;'>{$deadlineTgl}</h2>
+                                    <p style='margin: 0; color: #dc2626; font-weight: bold;'>Pukul {$deadlineJam} WIB</p>
                                 </div>
-
-                                <p style='color: #64748b; font-size: 14px; margin-bottom: 30px;'>
-                                    <em>\"$description\"</em>
-                                </p>
-
-                                <div style='text-align: center;'>
-                                    <a href='" . BASE_URL . "/index.php' style='background-color: #2563EB; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);'>
-                                        Buka Dashboard
-                                    </a>
-                                </div>
+                                {$attachmentHtml}
                             </div>
-                            
-                            <!-- Footer -->
-                            <div style='background: #f1f5f9; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8;'>
-                                &copy; " . date('Y') . " TaskAcademia - Universitas Buana Perjuangan Karawang
+                            <p style='color: #64748b; font-size: 14px; margin-bottom: 30px;'><em>\"" . strip_tags($description) . "\"</em></p>
+                            <div style='text-align: center;'>
+                                <a href='" . BASE_URL . "/index.php' style='background-color: #2563EB; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);'>Buka Dashboard</a>
                             </div>
                         </div>
-                    ";
+                        <div style='background: #f1f5f9; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8;'>
+                            &copy; " . date('Y') . " TaskAcademia - Universitas Buana Perjuangan Karawang
+                        </div>
+                    </div>";
 
-                    // 1. Send to TEST EMAIL if provided
-                    if (!empty($_POST['test_email'])) {
-                        $testEmail = trim($_POST['test_email']);
-                        // Use current user ID for test email log
-                        $notifier->sendEmail($_SESSION['user']['id'], $testEmail, "[$courseName] Tugas Baru: $title", $emailBody);
-                    }
-
-                    // 2. Send to ALL STUDENTS enrolled
-                    $students = $enrollModel->getStudentsByCourse($course_id);
                     foreach ($students as $mhs) {
                         try {
-                            $notifier->sendEmail($mhs['id'], $mhs['email'], "[$courseName] Tugas Baru: $title", $emailBody);
+                            if ($notifier->sendEmail($mhs['id'], $mhs['email'], "Tugas Baru: {$title}", $emailBody)) {
+                                $sentCount++;
+                            }
                         } catch (Exception $e) {
-                            // Continue sending to others even if one fails
-                            error_log("Failed sending to {$mhs['email']}");
+                            error_log("Email Error for {$mhs['email']}: " . $e->getMessage());
                         }
                     }
-                    // --- END EMAIL NOTIFICATION LOGIC ---
-
-                    // 3. Create Google Calendar Event (if connected)
-                    require_once __DIR__ . '/../../../app/Services/CalendarService.php';
-                    // Reload user to get fresh tokens
-                    $user = $pdo->query("SELECT * FROM users WHERE id=" . $_SESSION['user']['id'])->fetch(PDO::FETCH_ASSOC);
-                    
-                    if (!empty($user['refresh_token'])) {
-                        try {
-                            $calendar = new CalendarService();
-                            
-                            // Estimate Logic: Event lasts 1 hour by default? Or All Day?
-                            // Let's make it a 1-hour block at the deadline time
-                            $start = $deadline; 
-                            $end = date('Y-m-d H:i:s', strtotime($deadline) + 3600); // +1 Hour
-
-                            $calendar->createEvent($user, [
-                                'summary' => "[$courseName] $title",
-                                'description' => $description . "\n\nLink: " . BASE_URL,
-                                'start' => $start,
-                                'end' => $end
-                            ]);
-                        } catch (Exception $e) {
-                            error_log("Gagal membuat event kalender: " . $e->getMessage());
-                            // Do not show error to user, just log it.
-                        }
-                    }
-
-                    $success = "Tugas berhasil dibuat, notifikasi dikirim & masuk Kalender!";
-                } else {
-                    $error = "Gagal menyimpan tugas.";
                 }
+
+                $success = $sentCount > 0 
+                    ? "Tugas berhasil dipublikasikan dan $sentCount email notifikasi telah dikirim!" 
+                    : "Tugas berhasil dibuat (Namun 0 email dikirim karena belum ada mahasiswa yang mengambil mata kuliah ini).";
+            } else {
+                $error = "Terjadi kesalahan saat menyimpan tugas.";
             }
         }
     }
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Buat Tugas | Dosen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buat Tugas Baru | TaskAcademia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Outfit', sans-serif; }
         .glass {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .sidebar { background: rgba(15, 23, 42, 0.95); }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex items-center justify-center p-6 text-gray-800">
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen flex text-white font-outfit">
 
-    <!-- Background Orbs -->
-    <div class="fixed inset-0 pointer-events-none z-0">
-         <div class="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
-         <div class="absolute bottom-[20%] left-[10%] w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] mix-blend-screen"></div>
-    </div>
+    <?php include __DIR__ . '/../layouts/sidebar_dosen.php'; ?>
 
-    <div class="w-full max-w-3xl glass rounded-3xl p-8 md:p-10 shadow-2xl relative z-10 my-10">
-        
-        <!-- Header with Back Button (Same as prodi_edit.php) -->
-        <div class="mb-8">
-            <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-2 transition text-sm font-semibold group">
-                 <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                 Kembali
-            </a>
-            <div class="flex justify-between items-center">
-                <h1 class="text-3xl font-bold text-black">Buat Tugas Baru</h1>
-            </div>
-            <p class="text-blue-200 text-sm mt-1">Isi form di bawah untuk memberikan tugas ke mahasiswa.</p>
+    <!-- Success Handling with SWAL (Same as Edit page) -->
+    <?php if ($success): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '<?= $success ?>',
+                background: 'rgba(15, 23, 42, 0.95)',
+                color: '#fff',
+                confirmButtonColor: '#2563eb',
+                backdrop: `rgba(15, 23, 42, 0.4) blur(4px)`,
+                customClass: {
+                    popup: 'glass border border-white/10 rounded-3xl'
+                }
+            }).then(() => {
+                window.location.href = 'dashboard.php';
+            });
+        </script>
+    <?php endif; ?>
+
+    <?php if ($error): ?>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '<?= $error ?>',
+                background: 'rgba(15, 23, 42, 0.95)',
+                color: '#fff',
+                confirmButtonColor: '#2563eb',
+                backdrop: `rgba(15, 23, 42, 0.4) blur(4px)`,
+                customClass: {
+                    popup: 'glass border border-white/10 rounded-3xl'
+                }
+            });
+        </script>
+    <?php endif; ?>
+
+    <main id="main-content" class="flex-1 relative overflow-y-auto w-full md:w-auto min-h-screen transition-all duration-300 md:ml-20">
+        <!-- Background Orbs -->
+        <div class="fixed inset-0 pointer-events-none z-0">
+             <div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen"></div>
+             <div class="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
         </div>
 
-        <?php if ($success): ?>
-            <script>
-                Swal.fire({
-                    icon: 'success', title: 'Berhasil!', text: '<?= $success ?>', showConfirmButton: true
-                }).then(() => window.location.href = 'dashboard.php');
-            </script>
-        <?php endif; ?>
-        <?php if ($error): ?>
-            <script>Swal.fire({ icon: 'error', title: 'Gagal', text: '<?= $error ?>' });</script>
-        <?php endif; ?>
+        <div class="p-6 md:p-10 relative z-10 max-w-4xl mx-auto pt-20 md:pt-10">
+            <header class="mb-10">
+                <h1 class="text-3xl font-bold text-white">Buat Tugas Baru</h1>
+                <p class="text-blue-200">Publikasikan tugas dan berikan notifikasi ke mahasiswa Anda.</p>
+            </header>
 
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Mata Kuliah</label>
-                    <div class="relative">
-                        <select name="course_id" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-semibold text-gray-700">
-                            <option value="">-- Pilih Mata Kuliah --</option>
-                            <?php foreach ($courses as $c): ?>
-                                <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?> (Sem. <?= htmlspecialchars($c['semester']) ?>)</option>
-                            <?php endforeach; ?>
-                        </select>
+            <?php if ($error): ?>
+                <div class="mb-6 p-4 glass bg-red-500/10 border-red-500/20 text-red-200 rounded-2xl flex items-center gap-3">
+                    <span class="text-xl">⚠️</span> <?= $error ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="glass rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                <form method="POST" enctype="multipart/form-data" class="p-8 md:p-12 space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Mata Kuliah</label>
+                            <div class="relative group">
+                                <select name="course_id" required class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-bold appearance-none transition-all cursor-pointer">
+                                    <?php foreach ($courses as $c): ?>
+                                        <option value="<?= $c['id'] ?>" class="bg-slate-900"><?= htmlspecialchars($c['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-blue-300">▼</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Tenggat Waktu</label>
+                            <input type="datetime-local" name="deadline" required class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-bold transition-all">
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Deadline</label>
-                    <input type="datetime-local" name="deadline" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-gray-700">
-                </div>
-            </div>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
-                <input type="text" name="title" required placeholder="Contoh: Tugas Pengganti UTS" class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-gray-800">
-            </div>
-            
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Judul Tugas</label>
+                        <input type="text" name="title" placeholder="Contoh: Implementasi CRUD PHP & MySQL" required class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-bold placeholder-blue-300/20 transition-all">
+                    </div>
 
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Instruksi / Deskripsi</label>
+                        <textarea name="description" rows="5" placeholder="Tulis instruksi pengerjaan tugas di sini..." class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-medium placeholder-blue-300/20 transition-all resize-none"></textarea>
+                    </div>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Deskripsi</label>
-                <textarea name="description" rows="5" placeholder="Detail instruksi..." class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium text-gray-700"></textarea>
-            </div>
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Lampiran File (Opsional)</label>
+                        <div class="relative group">
+                            <input type="file" name="attachment" class="w-full px-6 py-4 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 font-medium transition-all file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-500">
+                        </div>
+                    </div>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Lampiran <span class="font-normal text-gray-400">(Opsional)</span></label>
-                <input type="file" name="attachment" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+                    <div class="flex flex-col md:flex-row gap-4 pt-6">
+                        <button type="submit" class="flex-1 relative group overflow-hidden rounded-2xl">
+                             <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 group-hover:from-blue-500 group-hover:to-indigo-500 transition-all"></div>
+                             <div class="relative py-4.5 flex items-center justify-center gap-3 text-white font-extrabold text-lg">
+                                <span>🚀 Publikasikan Tugas</span>
+                             </div>
+                        </button>
+                        <a href="dashboard.php" class="px-10 py-4.5 rounded-2xl glass text-slate-300 hover:bg-white/10 font-bold transition-all flex items-center justify-center border border-white/10">
+                            Batal
+                        </a>
+                    </div>
+                </form>
             </div>
-
-            <div class="flex gap-4 pt-4">
-                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold shadow-lg transition transform hover:-translate-y-1">🚀 Simpan & Kirim</button>
-                <a href="dashboard.php" class="px-8 py-4 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold transition bg-white/50">Batal</a>
-            </div>
-        </form>
-    </div>        </div>
+        </div>
     </main>
 </body>
 </html>
