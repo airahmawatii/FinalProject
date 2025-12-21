@@ -9,7 +9,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
     exit;
 }
 
-require_once __DIR__ . '/../../../app/config/config.php';
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/CourseModel.php';
 require_once __DIR__ . '/../../../app/Models/TaskModel.php';
