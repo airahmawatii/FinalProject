@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../app/config/config.php';
 $current_page = basename($_SERVER['PHP_SELF']);
 $uri = $_SERVER['REQUEST_URI'];
 
@@ -14,7 +15,7 @@ $prefix = $is_sub ? '../' : './';
     <div class="h-20 flex items-center px-6 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-white p-1 rounded-xl shadow-lg shadow-blue-500/20 border border-white/20 overflow-hidden">
-                <img src="<?= (defined('BASE_URL') ? BASE_URL : '/FinalProject/public') ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
+                <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
             </div>
             <div>
                 <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademia</h2>
@@ -96,7 +97,7 @@ $prefix = $is_sub ? '../' : './';
     </button>
     <div class="flex items-center gap-2">
          <div class="bg-white p-1 rounded-lg border border-white/20 w-8 h-8 overflow-hidden">
-             <img src="<?= (defined('BASE_URL') ? BASE_URL : '/FinalProject/public') ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
+             <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
          </div>
          <span class="font-bold text-white tracking-tight">TaskAcademia</span>
     </div>

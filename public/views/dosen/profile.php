@@ -1,7 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../app/config/config.php';
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
-    header("Location: /FinalProject/public/index.php");
+    header("Location: " . BASE_URL . "/index.php");
     exit;
 }
 
@@ -44,7 +48,7 @@ $user = $userModel->findById($_SESSION['user']['id']);
 // Fallback if session user is needed directly
 $_SESSION['user'] = $user;
 
-$photoUrl = !empty($user['photo']) ? "/FinalProject/public/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
+$photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
 ?>
 <!DOCTYPE html>
 <html lang="id">

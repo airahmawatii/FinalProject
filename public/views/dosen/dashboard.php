@@ -1,7 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../app/config/config.php';
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
-    header("Location: /FinalProject/public/index.php");
+    header("Location: " . BASE_URL . "/index.php");
     exit;
 }
 
@@ -235,7 +239,7 @@ $monthlyCounts = array_column($monthly, 'count');
                                 <span>📝</span> Tugas Terbaru
                             </h3>
                             <div class="flex gap-2">
-                                <a href="/FinalProject/public/download_report.php?format=pdf" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-red-500/30 transition text-sm flex items-center gap-2">
+                                <a href="<?= BASE_URL ?>/download_report.php?format=pdf" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-red-500/30 transition text-sm flex items-center gap-2">
                                     <span>📄</span> PDF
                                 </a>
                                 <a href="buat_tugas.php" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition text-sm flex items-center gap-2 border border-white/10">
@@ -292,7 +296,7 @@ $monthlyCounts = array_column($monthly, 'count');
                 headerToolbar: { left: 'title', right: 'prev,next' },
                 titleFormat: { year: '2-digit', month: 'short' },
                 height: 'auto',
-                events: '/FinalProject/public/api/get_tasks.php',
+                events: '<?= BASE_URL ?>/api/get_tasks.php',
                 eventColor: '#2563EB'
             });
             calendar.render();

@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../app/config/config.php';
 require_once __DIR__ . '/../../../app/config/database.php';
 
 $error = '';
@@ -7,7 +10,7 @@ $success = '';
 $token = $_GET['token'] ?? '';
 
 if (empty($token)) {
-    header("Location: login_view.php");
+    header("Location: " . BASE_URL . "/index.php?page=login");
     exit;
 }
 
@@ -65,7 +68,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password | TaskAcademy</title>
+    <title>Reset Password | TaskAcademia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -103,7 +106,7 @@ try {
                     </svg>
                 </div>
                 <p class="text-green-600 font-semibold mb-6"><?= $success ?></p>
-                <a href="login_view.php" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition">
+                <a href="<?= BASE_URL ?>/index.php?page=login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition">
                     Login Sekarang
                 </a>
             </div>
@@ -116,7 +119,7 @@ try {
                     </svg>
                 </div>
                 <p class="text-red-600 font-semibold mb-6"><?= $error ?></p>
-                <a href="forgot_password.php" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition">
+                <a href="<?= BASE_URL ?>/views/auth/forgot_password.php" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition">
                     Request Ulang
                 </a>
             </div>
@@ -158,7 +161,7 @@ try {
 
         <!-- Back to Login -->
         <div class="text-center mt-6">
-            <a href="login_view.php" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+            <a href="<?= BASE_URL ?>/index.php?page=login" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
                 ← Kembali ke Login
             </a>
         </div>

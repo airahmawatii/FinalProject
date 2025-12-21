@@ -123,7 +123,7 @@ require_once __DIR__ . '/../../../app/config/db_init.php';
 
                     <!-- Forgot Password Link -->
                     <div class="text-right">
-                        <a href="forgot_password.php" class="text-sm font-semibold text-blue-400 hover:text-blue-300 transition">
+                        <a href="<?= BASE_URL ?>/views/auth/forgot_password.php" class="text-sm font-semibold text-blue-400 hover:text-blue-300 transition">
                             Lupa Password?
                         </a>
                     </div>
@@ -139,7 +139,7 @@ require_once __DIR__ . '/../../../app/config/db_init.php';
                     <div class="flex-grow border-t border-white/20"></div>
                 </div>
 
-                <a href="/FinalProject/public/index.php?action=google_login" class="w-full flex items-center justify-center px-4 py-3 border-2 border-white/20 rounded-xl hover:bg-white/10 hover:border-white/30 transition gap-3 group backdrop-blur-sm">
+                <a href="<?= BASE_URL ?>/index.php?action=google_login" class="w-full flex items-center justify-center px-4 py-3 border-2 border-white/20 rounded-xl hover:bg-white/10 hover:border-white/30 transition gap-3 group backdrop-blur-sm">
                     <svg class="h-5 w-5 group-hover:scale-110 transition" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>

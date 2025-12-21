@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../app/config/config.php';
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!-- Sidebar Mahasiswa - Premium Glass Theme -->

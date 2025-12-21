@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../../../app/config/config.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +25,7 @@
             Silakan hubungi Admin Kampus atau cek kembali nanti.
         </p>
 
-        <a href="/FinalProject/public/logout.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition shadow-lg">
+        <a href="<?= BASE_URL ?>/logout.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition shadow-lg">
             Logout & Kembali
         </a>
     </div>

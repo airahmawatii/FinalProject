@@ -1,7 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../app/config/config.php';
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
-    header("Location: /FinalProject/public/index.php");
+    header("Location: " . BASE_URL . "/index.php");
     exit;
 }
 

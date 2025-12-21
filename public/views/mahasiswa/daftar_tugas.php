@@ -2,8 +2,10 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require_once __DIR__ . '/../../../app/config/config.php';
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'mahasiswa') {
-    header("Location: /FinalProject/public/index.php");
+    header("Location: " . BASE_URL . "/index.php");
     exit;
 }
 
@@ -21,7 +23,7 @@ $stmt->execute([$_SESSION['user']['id']]);
 $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 $user = $_SESSION['user'];
-$photoUrl = !empty($user['photo']) ? "/FinalProject/public/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
+$photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -132,7 +134,7 @@ $photoUrl = !empty($user['photo']) ? "/FinalProject/public/uploads/profiles/" . 
                                     Profile
                                 </a>
                                 <div class="border-t border-white/10 my-1"></div>
-                                <a href="/FinalProject/public/logout.php" 
+                                <a href="<?= BASE_URL ?>/logout.php" 
                                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-100 hover:bg-red-500/20 hover:text-white transition-all font-bold text-xs uppercase tracking-wider group/logout">
                                     <span class="text-lg group-hover/logout:rotate-12 transition-transform">🚪</span>
                                     Logout
@@ -239,7 +241,7 @@ $photoUrl = !empty($user['photo']) ? "/FinalProject/public/uploads/profiles/" . 
         }
 
         function toggleTask(taskId) {
-            fetch('/FinalProject/public/api/toggle_task.php', {
+            fetch('<?= BASE_URL ?>/api/toggle_task.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ task_id: taskId })

@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../app/config/config.php';
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/Notification.php';
 
@@ -34,14 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$email, $token]);
                 
                 // Send email
-                $resetLink = "http://localhost/FinalProject/public/views/auth/reset_password.php?token=$token";
+                $resetLink = BASE_URL . "/views/auth/reset_password.php?token=$token";
                 
                 $emailBody = "
                     <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
                         <!-- Header -->
                         <div style='background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 40px 30px; text-align: center;'>
                             <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>Reset Password 🔐</h1>
-                            <p style='color: #bfdbfe; margin-top: 5px; font-size: 14px;'>TaskAcademy</p>
+                            <p style='color: #bfdbfe; margin-top: 5px; font-size: 14px;'>TaskAcademia</p>
                         </div>
 
                         <!-- Content -->
@@ -72,13 +75,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         <!-- Footer -->
                         <div style='background: #f1f5f9; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8;'>
-                            &copy; " . date('Y') . " TaskAcademy - Universitas Buana Perjuangan Karawang
+                            &copy; " . date('Y') . " TaskAcademia - Universitas Buana Perjuangan Karawang
                         </div>
                     </div>
                 ";
                 
                 $notifier = new Notification();
-                $sent = $notifier->send($email, "Reset Password - TaskAcademy", $emailBody, "TaskAcademy");
+                $sent = $notifier->send($email, "Reset Password - TaskAcademia", $emailBody, "TaskAcademia");
                 
                 if ($sent) {
                     $success = "Link reset password telah dikirim ke email Anda. Silakan cek inbox/spam.";
@@ -101,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lupa Password | TaskAcademy</title>
+    <title>Lupa Password | TaskAcademia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -153,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Back to Login -->
         <div class="text-center mt-6">
-            <a href="login_view.php" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+            <a href="<?= BASE_URL ?>/index.php?page=login" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
                 ← Kembali ke Login
             </a>
         </div>

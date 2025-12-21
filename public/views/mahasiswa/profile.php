@@ -2,8 +2,10 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require_once __DIR__ . '/../../../app/config/config.php';
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'mahasiswa') {
-    header("Location: /FinalProject/public/index.php");
+    header("Location: " . BASE_URL . "/index.php");
     exit;
 }
 
@@ -35,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $user = $_SESSION['user'];
-$photoUrl = !empty($user['photo']) ? "/FinalProject/public/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
+$photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
 
 // Get enrolled courses for semester info
 $stmt = $pdo->prepare("SELECT DISTINCT c.semester FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE e.student_id = ?");
@@ -108,7 +110,7 @@ $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
             <a href="profile.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold transition transform md:hover:scale-[1.02] border border-white/10">
                 <span>👤</span> Profil Saya
             </a>
-            <a href="/FinalProject/public/logout.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 font-medium transition mt-auto border border-transparent hover:border-red-500/10">
+            <a href="<?= BASE_URL ?>/logout.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 font-medium transition mt-auto border border-transparent hover:border-red-500/10">
                 <span>🚪</span> Logout
             </a>
         </nav>
@@ -158,7 +160,7 @@ $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
                                     Profile
                                 </a>
                                 <div class="border-t border-white/10 my-1"></div>
-                                <a href="/FinalProject/public/logout.php" 
+                                <a href="<?= BASE_URL ?>/logout.php" 
                                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-100 hover:bg-red-500/20 hover:text-white transition-all font-bold text-xs uppercase tracking-wider group/logout">
                                     <span class="text-lg group-hover/logout:rotate-12 transition-transform">🚪</span>
                                     Logout
