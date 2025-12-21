@@ -47,61 +47,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style> body { font-family: 'Outfit', sans-serif; } </style>
 </head>
-<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 min-h-screen p-8 flex items-center justify-center">
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen p-8 flex items-center justify-center font-outfit">
 
-<div class="w-full max-w-lg bg-white p-8 rounded-3xl shadow-2xl">
-
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Tambah Mata Kuliah</h2>
-        <a href="index.php" class="text-gray-800 hover:text-red-500 transition text-2xl font-bold">&times;</a>
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen"></div>
+        <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
     </div>
 
-    <?php if ($error): ?>
-        <div class="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-sm"><?= $error ?></div>
-    <?php endif; ?>
+    <div class="w-full max-w-xl glass p-10 rounded-[2.5rem] shadow-2xl relative z-10 border border-white/20 overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
 
-    <form method="POST" class="space-y-5">
-        <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Nama Mata Kuliah</label>
-            <input type="text" name="name" required placeholder="Contoh: Pemrograman Web" 
-                   class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-        </div>
-
-        <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Semester</label>
-            <select name="semester" required 
-                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-                <option value="">-- Pilih Semester --</option>
-                <?php for ($i = 1; $i <= 8; $i++): ?>
-                    <option value="<?= $i ?>">Semester <?= $i ?></option>
-                <?php endfor; ?>
-            </select>
-        </div>
-
-        <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Dosen Pengajar</label>
-            <select name="dosen_id" required 
-                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-                <option value="">-- Pilih Dosen --</option>
-                <?php foreach ($users as $u): ?>
-                    <option value="<?= $u['id'] ?>">
-                        <?= htmlspecialchars($u['nama']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <div class="flex gap-3 pt-4">
-            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-lg transition">
-                Simpan Mata Kuliah
-            </button>
-            <a href="index.php" class="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold transition">
-                Batal
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h2 class="text-3xl font-bold text-white tracking-tight">Tambah Matakuliah</h2>
+                <p class="text-blue-300/60 text-sm mt-1">Daftarkan mata kuliah baru dalam kurikulum.</p>
+            </div>
+            <a href="index.php" class="w-10 h-10 rounded-xl glass flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all border border-white/10 group">
+                <span class="group-hover:rotate-90 transition-transform duration-300">✕</span>
             </a>
         </div>
-    </form>
 
-</div>
+        <?php if ($error): ?>
+            <div class="bg-red-500/10 text-red-300 p-4 rounded-2xl mb-8 text-sm border border-red-500/20 flex items-center gap-3">
+                <span class="text-xl">⚠️</span> <?= $error ?>
+            </div>
+        <?php endif; ?>
+
+        <form method="POST" class="space-y-6">
+            <div class="space-y-2">
+                <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Nama Mata Kuliah</label>
+                <input type="text" name="name" required placeholder="Contoh: Pemrograman Web Lanjut" 
+                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white placeholder-blue-300/30 border-white/10 transition-all">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Semester</label>
+                    <div class="relative">
+                        <select name="semester" required 
+                                class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white bg-slate-800/80 border-white/10 appearance-none cursor-pointer">
+                            <option value="">Pilih Semester</option>
+                            <?php for ($i = 1; $i <= 8; $i++): ?>
+                                <option value="<?= $i ?>">Semester <?= $i ?></option>
+                            <?php endfor; ?>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Dosen Pengampu</label>
+                    <div class="relative">
+                        <select name="dosen_id" required 
+                                class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white bg-slate-800/80 border-white/10 appearance-none cursor-pointer">
+                            <option value="">Pilih Dosen</option>
+                            <?php foreach ($users as $u): ?>
+                                <option value="<?= $u['id'] ?>">
+                                    <?= htmlspecialchars($u['nama']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-6">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-4 rounded-2xl font-bold shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10">
+                    Simpan Mata Kuliah
+                </button>
+                <a href="index.php" class="px-8 py-4 rounded-2xl glass text-slate-300 hover:bg-white/20 font-bold transition flex items-center border border-white/10">
+                    Batalkan
+                </a>
+            </div>
+        </form>
+    </div>
 
 </body>
 </html>

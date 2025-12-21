@@ -1,8 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-require_once __DIR__ . '/../../../app/config/config.php';
+session_start();
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/Notification.php';
 
@@ -37,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$email, $token]);
                 
                 // Send email
-                $resetLink = BASE_URL . "/views/auth/reset_password.php?token=$token";
+                $resetLink = "http://localhost/FinalProject/public/views/auth/reset_password.php?token=$token";
                 
                 $emailBody = "
                     <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>

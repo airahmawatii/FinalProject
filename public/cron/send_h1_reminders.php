@@ -128,7 +128,7 @@ foreach ($tasks as $task) {
 
             <p style='color: #64748b; font-size: 14px; margin-bottom: 30px;'>
                 <strong>Deskripsi Tugas:</strong><br>
-                <em>\"" . (mb_strimwidth($task['description'], 0, 150, "...")) . "\"</em>
+                <em>\"" . (mb_strimwidth(strip_tags($task['description']), 0, 150, "...")) . "\"</em>
             </p>
 
             <div style='background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 30px;'>

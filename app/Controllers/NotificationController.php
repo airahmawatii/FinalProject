@@ -6,7 +6,7 @@ class NotificationController
 
     public function send($to, $subject, $htmlbody)
     {
-        /*di bisa $to ambil dari database email na kan 
-        subject bisa buat lansung aja,sama html body esanna */
+        /*bisa ambil $to dari database email na kan 
+        subject bisa buat lansung aja,sama html body ge sama */
     }
 }

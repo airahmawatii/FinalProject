@@ -1,214 +1,101 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-// Helper function
-if (!function_exists('isActive')) {
-    function isActive($path) {
-        global $current_page;
-        return $current_page == basename($path);
-    }
-}
 ?>
-<!-- Mobile Menu Button -->
-<button id="mobile-menu-btn" class="fixed top-4 left-4 z-[60] p-3 bg-[#543abb] rounded-xl text-white md:hidden shadow-lg transition-all active:scale-95 border border-white/20">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
-</button>
-
-<!-- Sidebar Overlay -->
-<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
-
-<!-- Sidebar -->
-<!-- Style disamakan dengan Admin: bg-[#3e2b85] -->
-<aside id="sidebar" class="fixed inset-y-0 left-0 w-20 md:w-20 sidebar flex flex-col z-50 transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out bg-[#3e2b85] text-white group collapsed shadow-2xl">
-    
-    <!-- Branding / Header -->
-    <div class="p-6 flex items-center justify-center h-24 border-b border-white/10 relative">
-        <div class="flex items-center gap-3 overflow-hidden whitespace-nowrap transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
-                 <img src="<?= BASE_URL ?>/assets/img/logo_task_academia.jpg" alt="Logo" class="w-full h-full object-cover">
+<!-- Sidebar Mahasiswa - Premium Glass Theme -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-64 backdrop-blur-2xl bg-slate-900/80 border-r border-white/10 flex flex-col z-50 transform -translate-x-full md:translate-x-0 md:relative md:shadow-none transition-transform duration-300 ease-in-out shadow-2xl text-white">
+    <!-- Header Logo -->
+    <div class="h-20 flex items-center px-6 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
+        <div class="flex items-center gap-3">
+             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/20">
+                <span class="text-2xl">🎓</span>
             </div>
-            <div class="sidebar-text transition-all duration-300 opacity-100 group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 group-[.collapsed]:invisible">
-                <h2 class="text-lg font-bold text-white tracking-tight">TaskAcademia</h2>
-                <p class="text-[10px] uppercase text-indigo-200 tracking-wider">Student Panel</p>
+            <div class="flex flex-col">
+                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademy</h2>
+                <p class="text-cyan-400 text-[9px] font-extrabold uppercase tracking-[0.2em]">Mahasiswa</p>
             </div>
         </div>
-        
-        <!-- Desktop Toggle Button -->
-        <button id="desktop-toggle-btn" class="hidden md:flex absolute -right-3 top-9 bg-white text-[#3e2b85] w-6 h-6 items-center justify-center rounded-full shadow-md hover:bg-gray-100 transition-all z-50 border border-gray-100 transform active:scale-95 group/btn">
-            <svg class="w-4 h-4 transition-transform duration-500 transform group-[.collapsed]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-        </button>
-
-        <!-- Mobile Close Button -->
-        <button id="close-sidebar-btn" class="md:hidden absolute right-4 text-white hover:text-gray-200">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
     </div>
-    
-    <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-6 px-3 space-y-2 custom-scrollbar">
-        
-        <!-- Menu Items Mahasiswa -->
-        <?php foreach ([
-            ['url' => BASE_URL . '/views/mahasiswa/dashboard_mahasiswa.php', 'icon' => '🏠', 'label' => 'Dashboard'],
-            ['url' => BASE_URL . '/views/mahasiswa/daftar_tugas.php', 'icon' => '📝', 'label' => 'Daftar Tugas'],
-            ['url' => BASE_URL . '/views/mahasiswa/profile.php', 'icon' => '👤', 'label' => 'Profil Saya'],
-        ] as $item): 
-            $isActive = $current_page == basename($item['url']);
-            // Style active/inactive disamakan dengan Admin
-            $activeClass = $isActive ? 'bg-[#543abb] text-white shadow-lg' : 'hover:bg-[#4a339b] text-indigo-100';
-        ?>
-            <a href="<?= $item['url'] ?>" class="flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group/link relative <?= $activeClass ?>">
-                <span class="text-xl min-w-[24px] text-center"><?= $item['icon'] ?></span>
-                <span class="sidebar-text whitespace-nowrap font-medium text-sm transition-all group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 overflow-hidden"><?= $item['label'] ?></span>
-                 <!-- Tooltip -->
-                 <div class="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-[.collapsed]:group-hover/link:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl"><?= $item['label'] ?></div>
-            </a>
-        <?php endforeach; ?>
 
-        <!-- Logout -->
-        <a href="<?= BASE_URL ?>/logout.php" class="flex items-center gap-3 px-3 py-3 rounded-xl text-red-300 hover:bg-red-500/20 hover:text-red-100 font-medium transition mt-10 group/link relative">
-            <span class="text-xl min-w-[24px] text-center">🚪</span>
-            <span class="sidebar-text whitespace-nowrap transition-all duration-300 opacity-100 group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 overflow-hidden">Logout</span>
-             <!-- Tooltip -->
-            <div class="absolute left-14 bg-red-900 text-white text-xs px-2 py-1 rounded opacity-0 group-[.collapsed]:group-hover/link:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-red-700 whitespace-nowrap z-50">
-                Logout
-            </div>
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
+        
+        <p class="text-[10px] font-bold text-slate-500 px-4 mb-2 uppercase tracking-widest">Menu Utama</p>
+        
+        <a href="/FinalProject/public/views/mahasiswa/dashboard_mahasiswa.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'dashboard_mahasiswa.php' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-600/40 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">🏠</span>
+            <span class="text-sm">Dashboard</span>
+        </a>
+        
+        <a href="daftar_tugas.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'daftar_tugas.php' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-600/40 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">⚡</span>
+            <span class="text-sm">Daftar Tugas</span>
         </a>
 
-        <!-- Google Connect -->
-        <div class="mt-6 px-1 transition-all duration-300 group-[.collapsed]:hidden">
-            <div class="border-t border-white/10 my-4"></div>
-            <?php if (empty($_SESSION['user']['refresh_token'])): ?>
-                <a href="<?= BASE_URL ?>/connect_google.php" class="flex items-center gap-2 text-xs bg-white/10 hover:bg-white/20 text-indigo-100 px-3 py-2.5 rounded-xl transition-all border border-white/5 justify-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="w-4 h-4">
-                    <span>Hubungkan Google</span>
-                </a>
-            <?php else: ?>
-                <div class="flex items-center gap-2 text-xs text-green-300 bg-green-500/10 px-3 py-2.5 rounded-xl border border-green-500/20 w-full justify-center">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span>Google Terhubung</span>
-                </div>
-            <?php endif; ?>
-        </div>
+        <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-2 uppercase tracking-widest">Akun</p>
+
+        <a href="/FinalProject/public/views/mahasiswa/profile.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'profile.php' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-600/40 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">👤</span>
+            <span class="text-sm">Profil Saya</span>
+        </a>
     </nav>
+
+    <!-- Profile Footer -->
+    <div class="p-6 border-t border-white/10">
+        <div class="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 rounded-2xl p-4 border border-white/10 mb-4 shadow-inner">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-lg border border-white/20">
+                    <?= strtoupper(substr($_SESSION['user']['nama'] ?? 'M', 0, 1)) ?>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-white truncate"><?= htmlspecialchars($_SESSION['user']['nama'] ?? 'Mahasiswa') ?></p>
+                    <div class="flex flex-col gap-0.5">
+                        <p class="text-[9px] text-cyan-300 font-extrabold uppercase tracking-wider"><?= htmlspecialchars($_SESSION['user']['nim'] ?? '') ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="/FinalProject/public/logout.php" class="flex items-center justify-center gap-2 w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 rounded-xl text-xs font-bold transition shadow-lg">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            Sign Out
+        </a>
+    </div>
 </aside>
 
+<!-- Mobile Header -->
+<div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-white/10 z-40 flex items-center px-4 justify-between shadow-xl">
+    <button onclick="toggleSidebar()" class="p-2 -ml-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+    <div class="flex items-center gap-2">
+         <div class="bg-white/10 p-1.5 rounded-lg border border-white/10">
+             <span class="text-xl">🎓</span>
+         </div>
+         <span class="font-bold text-white tracking-tight">TaskAcademia</span>
+    </div>
+    <div class="w-8"></div>
+</div>
+
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-        const desktopToggleBtn = document.getElementById('desktop-toggle-btn');
-        const mainContent = document.getElementById('main-content');
-        const isMobile = () => window.innerWidth < 768;
-
-        // JS Logic yang sama persis dengan Admin untuk konsistensi
-        function toggleMobileSidebar() {
-            const isClosed = sidebar.classList.contains('-translate-x-full');
-            if (isClosed) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-                document.body.classList.add('overflow-hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => { 
-                    overlay.classList.add('hidden'); 
-                    document.body.classList.remove('overflow-hidden');
-                }, 300);
-            }
-        }
-
-        function toggleDesktopCollapse() {
-            if (isMobile()) return;
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            
-            sidebar.classList.toggle('collapsed');
-            sidebar.classList.toggle('w-72'); // Original widths from Admin
-            sidebar.classList.toggle('w-20');
-            sidebar.classList.toggle('md:w-72');
-            sidebar.classList.toggle('md:w-20');
-            
-            if (mainContent) {
-                if (isCollapsed) {
-                    mainContent.classList.remove('md:ml-20');
-                    mainContent.classList.add('md:ml-72');
-                } else {
-                    mainContent.classList.remove('md:ml-72');
-                    mainContent.classList.add('md:ml-20');
-                }
-            }
-            localStorage.setItem('sidebar_collapsed_mhs', !isCollapsed);
-        }
-
-        // Auto Close on Mobile Link Click
-        const navLinks = sidebar.querySelectorAll('nav a');
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (isMobile()) {
-                    toggleMobileSidebar();
-                }
-            });
-        });
-
-        mobileMenuBtn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMobileSidebar();
-        });
         
-        overlay?.addEventListener('click', toggleMobileSidebar);
-        closeSidebarBtn?.addEventListener('click', toggleMobileSidebar);
-        desktopToggleBtn?.addEventListener('click', toggleDesktopCollapse);
-
-        // Responsive Reset & Init
-        function handleResize() {
-             if (!isMobile()) {
-                // Desktop Mode
-                overlay.classList.add('hidden', 'opacity-0');
-                document.body.classList.remove('overflow-hidden');
-                sidebar.classList.remove('-translate-x-full');
-                
-                const savedState = localStorage.getItem('sidebar_collapsed_mhs');
-                if (savedState === 'false') {
-                     sidebar.classList.remove('collapsed', 'w-20', 'md:w-20');
-                     sidebar.classList.add('w-72', 'md:w-72');
-                     if (mainContent) { mainContent.classList.remove('md:ml-20'); mainContent.classList.add('md:ml-72'); }
-                } else {
-                     sidebar.classList.add('collapsed', 'w-20', 'md:w-20');
-                     sidebar.classList.remove('w-72', 'md:w-72');
-                     if (mainContent) { mainContent.classList.remove('md:ml-72'); mainContent.classList.add('md:ml-20'); }
-                }
-            } else {
-                // Mobile Mode
-                sidebar.classList.remove('w-20', 'md:w-20', 'w-72', 'md:w-72', 'collapsed'); // Reset fixed widths
-                sidebar.classList.add('w-64'); // Fixed width for mobile
-                
-                if (mainContent) { 
-                    mainContent.classList.remove('md:ml-20', 'md:ml-72'); 
-                    mainContent.classList.add('ml-0');
-                }
-
-                if (!overlay.classList.contains('hidden')) {
-                     sidebar.classList.remove('-translate-x-full');
-                } else {
-                     sidebar.classList.add('-translate-x-full');
-                }
-            }
-        }
-
-        window.addEventListener('resize', handleResize);
+        const isHidden = sidebar.classList.contains('-translate-x-full');
         
-        // Initial Call
-        setTimeout(handleResize, 100);
-    });
+        if (isHidden) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        } else {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+    }
 </script>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
-    #main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    aside#sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-</style>

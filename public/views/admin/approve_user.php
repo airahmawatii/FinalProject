@@ -4,8 +4,7 @@ require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/UserModel.php';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    require_once __DIR__ . '/../../../app/config/config.php';
-    header("Location: " . BASE_URL . "/index.php?page=login");
+    header("Location: /FinalProject/public/index.php?page=login");
     exit;
 }
 

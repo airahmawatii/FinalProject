@@ -3,17 +3,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'mahasiswa') {
-    header("Location: " . BASE_URL . "/index.php");
+    header("Location: /FinalProject/public/index.php");
     exit;
 }
 
-// Strict Status Check for Google Login Users
-if ($_SESSION['user']['status'] !== 'active') {
-    header("Location: " . BASE_URL . "/views/auth/pending.php");
-    exit;
-}
-
-require_once __DIR__ . '/../../../app/config/config.php';
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/TaskModel.php';
 
@@ -22,7 +15,7 @@ $pdo = $db->connect();
 $taskModel = new TaskModel($pdo);
 $tasks = $taskModel->getByStudent($_SESSION['user']['id']);
 
-// Get enrolled courses for semester info (Simplified)
+// Get enrolled courses for semester info
 $stmt = $pdo->prepare("SELECT DISTINCT c.semester FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE e.student_id = ?");
 $stmt->execute([$_SESSION['user']['id']]);
 $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -31,16 +24,27 @@ $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
 $now = time();
 $nextDeadline = null;
 $urgentCount = 0;
+$completedCount = 0;
 
 foreach ($tasks as $t) {
-    $deadlineTime = strtotime($t['deadline']);
-    if ($deadlineTime > $now) {
-        if ($nextDeadline === null || $deadlineTime < strtotime($nextDeadline['deadline'])) {
-            $nextDeadline = $t;
+    if ($t['is_completed']) {
+        $completedCount++;
+    } else {
+        $deadlineTime = strtotime($t['deadline']);
+        if ($deadlineTime > $now) {
+            if ($nextDeadline === null || $deadlineTime < strtotime($nextDeadline['deadline'])) {
+                $nextDeadline = $t;
+            }
+            if ($deadlineTime - $now < 3 * 86400) $urgentCount++;
         }
-        if ($deadlineTime - $now < 3 * 86400) $urgentCount++;
     }
 }
+
+$totalTasks = count($tasks);
+$completionRate = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) : 0;
+
+$user = $_SESSION['user'];
+$photoUrl = !empty($user['photo']) ? "/FinalProject/public/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,17 +66,66 @@ foreach ($tasks as $t) {
             border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-        .sidebar { background: rgba(15, 23, 42, 0.95); } /* Slate 900 */
+        #calendar, #gantt-chart { min-height: 350px; color: #1e293b; }
     </style>
     <?php include __DIR__ . '/../layouts/calendar_style.php'; ?>
 </head>
 <body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex text-gray-800">
 
-    <!-- Sidebar Integrated -->
-    <?php include __DIR__ . '/../layouts/sidebar_mahasiswa.php'; ?>
+    <!-- Mobile Menu Button -->
+    <button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 p-2 bg-slate-800 rounded-lg text-white md:hidden shadow-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 backdrop-blur-2xl bg-slate-900/80 border-r border-white/10 flex flex-col z-40 transform -translate-x-full md:translate-x-0 md:relative md:shadow-none transition-transform duration-300 ease-in-out shadow-2xl text-white">
+        <div class="p-8 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-transparent via-white/5 to-transparent">
+            <div>
+                <h2 class="text-2xl font-bold flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+                    <span class="text-3xl">🎓</span> TaskAcademy
+                </h2>
+                <p class="text-slate-400 text-[10px] mt-2 font-bold tracking-[0.2em] uppercase">Student Dashboard</p>
+            </div>
+            <button id="close-sidebar-btn" class="md:hidden text-slate-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
+            <!-- Status Card -->
+            <div class="mb-6 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-2xl p-4 border border-white/10 mx-2 shadow-inner">
+                <p class="text-[9px] text-blue-300 font-extrabold uppercase tracking-widest mb-1">Status Akademik</p>
+                <p class="text-sm text-white font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                    Semester Aktif: <?= !empty($semesters) ? max($semesters) : '1' ?>
+                </p>
+            </div>
+
+            <a href="dashboard_mahasiswa.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold transition transform md:hover:scale-[1.02] border border-white/10">
+                <span class="text-lg transition">🏠</span> Dashboard
+            </a>
+            
+            <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-3 uppercase tracking-widest">Utama</p>
+            <a href="daftar_tugas.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white font-medium transition duration-300 border border-transparent hover:border-white/10 group">
+                <span>📝</span> Daftar Tugas
+            </a>
+            
+            <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-3 uppercase tracking-widest">Akun</p>
+            <a href="profile.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white font-medium transition duration-300 border border-transparent hover:border-white/10 group">
+                <span class="group-hover:scale-110 transition">👤</span> Profil Saya
+            </a>
+            <a href="/FinalProject/public/logout.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 font-medium transition mt-auto border border-transparent hover:border-red-500/10">
+                <span>🚪</span> Logout
+            </a>
+        </nav>
+
+    </aside>
 
     <!-- Main Content -->
-    <main id="main-content" class="flex-1 relative overflow-y-auto w-full transition-all duration-300 md:ml-72">
+    <main class="flex-1 relative overflow-y-auto w-full md:w-auto">
         <!-- Background Orbs -->
         <div class="fixed inset-0 pointer-events-none z-0">
              <div class="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
@@ -83,12 +136,28 @@ foreach ($tasks as $t) {
             <!-- Header -->
             <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                 <div>
-                     <h1 class="text-3xl md:text-4xl font-bold mb-2 text-white">Halo, <?= htmlspecialchars(explode(' ', $_SESSION['user']['nama'] ?? $_SESSION['user']['email'])[0]) ?>! ✨</h1>
-                    <p class="text-blue-200">Tetap semangat, pantau tugasmu hari ini.</p>
+                     <h1 class="text-3xl md:text-3xl font-bold mb-2 text-white">Halo, <?= htmlspecialchars(explode(' ', $_SESSION['user']['nama'] ?? $_SESSION['user']['email'])[0]) ?>! ✨</h1>
+                     <p class="text-blue-200">Tetap semangat, pantau tugasmu hari ini.</p>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div class="glass px-4 py-2 rounded-full flex items-center gap-2 text-sm text-blue-900 font-bold bg-white">
+                    <!-- Online Badge -->
+                    <div class="glass px-4 py-2 rounded-full flex items-center gap-2 text-sm text-blue-900 font-bold bg-white/80 backdrop-blur-sm hidden md:flex">
                         <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online
+                    </div>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative group">
+                        <a href="profile.php" class="glass pl-2 pr-4 py-1.5 rounded-full flex items-center gap-3 text-left hover:bg-white/20 transition shadow-lg border border-white/20">
+                            <div class="w-10 h-10 rounded-full p-[2px] bg-gradient-to-br from-blue-400 to-indigo-600 shadow-inner">
+                                <img src="<?= $photoUrl ?>" 
+                                     alt="Profile" class="w-full h-full rounded-full object-cover">
+                            </div>
+                            <div class="hidden md:block text-right">
+                                <p class="text-sm font-bold text-white leading-none"><?= htmlspecialchars(explode(' ', $_SESSION['user']['nama'])[0]) ?></p>
+                                <p class="text-[10px] text-blue-200 uppercase font-semibold tracking-wider mt-0.5"><?= $_SESSION['user']['role'] ?></p>
+                            </div>
+                            <svg class="w-4 h-4 text-blue-200 hidden md:block group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
                     </div>
                 </div>
             </header>
@@ -96,7 +165,7 @@ foreach ($tasks as $t) {
             <!-- Featured Cards Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
                 
-                <!-- Next Deadline Card (Gradient for emphasis) -->
+                <!-- Next Deadline Card -->
                 <div class="glass p-8 rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 text-white lg:col-span-2 relative overflow-hidden shadow-2xl transform hover:scale-[1.01] transition-all border-none">
                     <div class="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                     <div class="relative z-10 flex flex-col justify-between h-full">
@@ -106,8 +175,8 @@ foreach ($tasks as $t) {
                                 <span class="font-bold uppercase tracking-wider text-xs">PRIORITAS UTAMA</span>
                             </div>
                             <?php if ($nextDeadline): ?>
-                                <h2 class="text-3xl md:text-4xl font-extrabold mb-2 leading-tight break-words"><?= htmlspecialchars($nextDeadline['task_title']) ?></h2>
-                                <p class="text-lg text-white/90 font-medium break-words"><?= htmlspecialchars($nextDeadline['course_name']) ?></p>
+                                <h2 class="text-3xl md:text-4xl font-extrabold mb-2 leading-tight"><?= htmlspecialchars($nextDeadline['task_title']) ?></h2>
+                                <p class="text-lg text-white/90 font-medium"><?= htmlspecialchars($nextDeadline['course_name']) ?></p>
                                 <div class="mt-8 flex flex-wrap items-center gap-4">
                                     <div class="bg-white/20 backdrop-blur-md px-5 py-3 rounded-xl border border-white/20">
                                         <span class="block text-xs uppercase opacity-80 font-bold">Tenggat</span>
@@ -126,57 +195,49 @@ foreach ($tasks as $t) {
                     </div>
                 </div>
 
-                <!-- Summary Card (White Glass) -->
-                <div class="glass p-6 rounded-3xl flex flex-col justify-center">
+                <!-- Summary Card -->
+                <div class="glass p-6 rounded-3xl flex flex-col justify-center shadow-xl">
                     <h3 class="text-xl font-bold mb-6 text-center text-gray-800">Ringkasan</h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center p-4 bg-blue-50 rounded-2xl">
                             <span class="text-gray-600 font-medium">Total Tugas</span>
                             <span class="text-2xl font-bold text-blue-600"><?= count($tasks) ?></span>
                         </div>
+                        
+                        <div class="p-4 bg-green-50 rounded-2xl border border-green-100">
+                             <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600 font-medium text-sm">Selesai</span>
+                                <span class="text-green-600 font-bold text-sm"><?= $completionRate ?>%</span>
+                            </div>
+                            <div class="w-full bg-green-200 rounded-full h-2.5">
+                                <div class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: <?= $completionRate ?>%"></div>
+                            </div>
+                        </div>
+
                         <div class="flex justify-between items-center p-4 bg-red-50 rounded-2xl border border-red-100">
                             <span class="text-red-600 font-medium">Urgent (<3 Hari)</span>
                             <span class="text-2xl font-bold text-red-600"><?= $urgentCount ?></span>
                         </div>
-                        <a href="<?= BASE_URL ?>/download_report.php" class="block w-full text-center bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
-                            📄 Download Transkrip Tugas
-                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Main Content Grid -->
-            <div class="space-y-10">
-                <!-- Task List Area -->
-                <div class="w-full space-y-8">
-                    <!-- Task List Moved to daftar_tugas.php -->
-                    
+            <div class="flex flex-col gap-8 mb-10">
+                <!-- Kalender Akademik on Top -->
+                <div class="glass rounded-3xl p-8 shadow-xl">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                        <span>📅</span> Kalender Akademik
+                    </h3>
+                    <div id='calendar'></div>
                 </div>
 
-                <!-- Visualization Section (Timeline & Calendar) -->
-                <!-- Visualization Section (Calendar TOP, Gantt BOTTOM) -->
-                <div class="space-y-8 w-full">
-                    
-                     <!-- Calendar (Big & Top) -->
-                    <div class="glass rounded-3xl p-6 shadow-xl">
-                        <h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                            <span>📅</span> Kalender Akademik
-                        </h3>
-                        <div id='calendar' class="text-sm"></div>
-                    </div>
-
-
-                        <!-- Gantt Chart (Bottom & Compact) -->
-                        <div class="glass rounded-3xl p-6 shadow-xl">
-                             <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
-                                <span>⏳</span> Timeline Pengerjaan
-                            </h3>
-                            <!-- Dynamic Height handled by JS -->
-                            <div id="gantt-chart"></div>
-                        </div>
-                    </div>
+                <!-- Timeline Pengerjaan (Gantt Chart) Below -->
+                <div class="glass rounded-3xl p-8 shadow-xl">
+                     <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
+                        <span>⏳</span> Timeline Pengerjaan (Gantt Chart)
+                     </h3>
+                    <div id="gantt-chart"></div>
                 </div>
-
             </div>
 
         </div>
@@ -184,14 +245,33 @@ foreach ($tasks as $t) {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
 
-            // Fetch Data
-            fetch('<?= BASE_URL ?>/api/get_tasks.php')
+            function toggleSidebar() {
+                const isClosed = sidebar.classList.contains('-translate-x-full');
+                if (isClosed) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => overlay.classList.add('hidden'), 300);
+                }
+            }
+            if(mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleSidebar);
+                overlay.addEventListener('click', toggleSidebar);
+                closeSidebarBtn.addEventListener('click', toggleSidebar);
+            }
+
+            fetch('/FinalProject/public/api/get_tasks.php?all=true')
                 .then(response => response.json())
                 .then(tasks => {
-                    // Calendar
                     var calendarEl = document.getElementById('calendar');
-
                     if (calendarEl) {
                         var calendar = new FullCalendar.Calendar(calendarEl, {
                             initialView: 'dayGridMonth',
@@ -200,16 +280,15 @@ foreach ($tasks as $t) {
                             height: 'auto',
                             events: tasks.map(t => ({
                                 title: t.title,
-                                start: t.start, 
-                                end: t.end,     
+                                start: t.end,
                                 backgroundColor: '#2563EB',
                                 borderColor: '#2563EB',
-                                allDay: true 
+                                extendedProps: { course: t.course }
                             })),
-                            eventClick: function(info) {
+                             eventClick: function(info) {
                                 Swal.fire({
                                     title: info.event.title,
-                                    text: 'Deadline: ' + new Date(info.event.end).toLocaleDateString(),
+                                    text: 'Mata Kuliah: ' + (info.event.extendedProps.course || 'Umum'),
                                     icon: 'info'
                                 });
                             }
@@ -217,75 +296,50 @@ foreach ($tasks as $t) {
                         calendar.render();
                     }
 
-                    // Gantt (ApexCharts)
-                     var options = {
-                        series: [{
-                            name: 'Jadwal Pengerjaan',
-                            data: tasks.map(t => ({
-                                x: t.course, 
-                                y: t.gantt.y,
-                                fillColor: t.gantt.fillColor
-                            }))
-                        }],
-                        chart: {
-
-                            // Validasi Data Length untuk tinggi dinamis
-                            height: tasks.length > 0 ? Math.max(350, tasks.length * 65) : 350, 
-
-                            type: 'rangeBar',
-                            fontFamily: 'Outfit, sans-serif',
-                            toolbar: { show: false },
-                            background: 'transparent'
-                        },
-                        plotOptions: {
-                            bar: {
-                                horizontal: true,
-                                barHeight: '40%', // Thinner bars for elegance
-                                borderRadius: 4,
-                                rangeBarGroupRows: true
-                            }
-                        },
-                        xaxis: { 
-                            type: 'datetime',
-
-                            position: 'top', 
-
-                            labels: {
-                                format: 'dd MMM',
-                                style: { colors: '#64748b', fontSize: '11px', fontWeight: 600 }
-                            },
-                            axisBorder: { show: false },
-                            axisTicks: { show: false }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: { colors: '#334155', fontSize: '12px', fontWeight: 600 },
-                                maxWidth: 120
-                            }
-                        },
-                        grid: { 
-                            show: true,
-                            borderColor: '#f1f5f9',
-                            strokeDashArray: 4,
-                            xaxis: { lines: { show: true } },
-                            padding: { right: 20, left: 10, top: 0, bottom: 0 }
-                        },
-                        dataLabels: { enabled: false },
-                        tooltip: {
-                            theme: 'light',
-                            style: { fontSize: '12px' },
-                            x: { format: 'dd MMM yyyy' }
+                    // Gantt Chart
+                    const ganttEl = document.querySelector("#gantt-chart");
+                    if (ganttEl) {
+                        if (!tasks || tasks.length === 0) {
+                            ganttEl.innerHTML = '<div class="text-center py-10 text-slate-400 font-medium italic">Belum ada data linimasa tugas. ✨</div>';
+                        } else {
+                            var options = {
+                                series: [{
+                                    name: 'Rentang Waktu',
+                                    data: tasks.filter(t => t.gantt && t.gantt.y).map(t => ({
+                                        x: t.title || 'Tanpa Judul', 
+                                        y: t.gantt.y,
+                                        fillColor: t.gantt.fillColor || '#3B82F6'
+                                    }))
+                                }],
+                                chart: {
+                                    height: Math.max(350, tasks.length * 50 + 100),
+                                    type: 'rangeBar',
+                                    toolbar: { show: false },
+                                    background: 'transparent',
+                                    foreColor: '#1e293b'
+                                },
+                                plotOptions: {
+                                    bar: {
+                                        horizontal: true,
+                                        barHeight: '60%',
+                                        borderRadius: 8,
+                                        rangeBarGroupRows: true
+                                    }
+                                },
+                                colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+                                xaxis: { type: 'datetime' },
+                                grid: { 
+                                    show: true,
+                                    borderColor: '#e2e8f0',
+                                    xaxis: { lines: { show: true } }
+                                }
+                            };
+                            var chart = new ApexCharts(document.querySelector("#gantt-chart"), options);
+                            chart.render();
                         }
-                    };
-                    
-                    var chartEl = document.querySelector("#gantt-chart");
-                    if (chartEl) {
-                        var chart = new ApexCharts(chartEl, options);
-                        chart.render();
                     }
                 });
 
-            // Flash Message
             <?php if (isset($_SESSION['flash_message'])): ?>
                 Swal.fire({
                     icon: 'success',
@@ -299,7 +353,7 @@ foreach ($tasks as $t) {
         });
 
         function toggleTask(taskId) {
-            fetch('<?= BASE_URL ?>/api/toggle_task.php', {
+            fetch('/FinalProject/public/api/toggle_task.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ task_id: taskId })
@@ -314,8 +368,35 @@ foreach ($tasks as $t) {
             });
         }
 
+        async function shareTask(taskId) {
+            const { value: email } = await Swal.fire({
+                title: 'Kirim ke Teman 📧',
+                input: 'email',
+                inputLabel: 'Masukkan email teman kamu',
+                inputPlaceholder: 'nama@email.com',
+                showCancelButton: true,
+                confirmButtonText: 'Kirim',
+                confirmButtonColor: '#2563EB',
+                cancelButtonText: 'Batal'
+            });
 
+            if (email) {
+                Swal.showLoading();
+                fetch('/FinalProject/public/api/share_task.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task_id: taskId, email: email })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire('Terkirim!', 'Deadline berhasil dikirim ke temanmu.', 'success');
+                    } else {
+                        Swal.fire('Gagal', data.message, 'error');
+                    }
+                });
+            }
+        }
     </script>
-
 </body>
 </html>
