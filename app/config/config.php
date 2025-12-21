@@ -20,9 +20,9 @@ if (isset($_SERVER['HTTP_HOST'])) {
     define('BASE_URL', $protocol . "://" . $host . $path);
 } else {
     // FALLBACK FOR CRONJOB/CLI
-    // Manual setup for hosting: nalasia.my.id
-    // If you have a .env variable for APP_URL, use that here.
-    define('BASE_URL', 'https://nalasia.my.id'); 
+    // Priority: .env APP_URL > Hardcoded fallback
+    $fallbackUrl = $_ENV['APP_URL'] ?? 'https://nalasia.my.id';
+    define('BASE_URL', $fallbackUrl); 
 }
 
 // Set default timezone to WIB (Western Indonesian Time - UTC+7)

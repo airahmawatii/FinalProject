@@ -19,7 +19,8 @@ class AnalyticsService
     {
         return [
             'total_users' => $this->pdo->query("SELECT COUNT(*) FROM users")->fetchColumn(),
-            'total_courses' => $this->pdo->query("SELECT COUNT(*) FROM courses")->fetchColumn(),
+            'total_dosen' => $this->pdo->query("SELECT COUNT(*) FROM users WHERE role='dosen'")->fetchColumn(),
+            'total_mahasiswa' => $this->pdo->query("SELECT COUNT(*) FROM users WHERE role='mahasiswa'")->fetchColumn(),
             'total_tasks' => $this->pdo->query("SELECT COUNT(*) FROM tasks")->fetchColumn(),
             'active_students' => $this->pdo->query("SELECT COUNT(*) FROM users WHERE role='mahasiswa' AND status='active'")->fetchColumn(),
         ];

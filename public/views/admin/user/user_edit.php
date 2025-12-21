@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once "../../../../app/config/database.php";
+require_once "../../../../app/Models/UserModel.php";
+require_once "../../../../app/Models/ProdiModel.php";
 
 // Cek role admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -9,16 +11,18 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 $db = new Database();
 $pdo = $db->connect();
+$userModel = new UserModel($pdo);
+$prodiModel = new ProdiModel($pdo);
 
 $id = $_GET['id'] ?? null;
 if (!$id) {
     die("ID user tidak ditemukan.");
 }
 
-// Ambil data user
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
-$stmt->execute([$id]);
-$currentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+// Ambil data user lengkap (termasuk NIM/NIDN + Prodi)
+$currentUser = $userModel->findById($id);
+// Ambil list prodi
+$prodiList = $prodiModel->getAll();
 
 if (!$currentUser) {
     die("User tidak ditemukan.");
@@ -31,20 +35,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama = $_POST['nama'];
     $email = $_POST['email'];
     $role = $_POST['role'];
-    $status = $_POST['status'];
+    $status = $_POST['status'] ?? 'active';
+
+    $data = [
+        'nim' => $_POST['nim'] ?? null,
+        'nidn' => $_POST['nidn'] ?? null,
+        'nip' => $_POST['nip'] ?? null,
+        'prodi_id' => $_POST['prodi_id'] ?? null,
+        'status' => $_POST['status'] ?? 'active'
+    ];
 
     try {
-        if (isset($currentUser['status'])) {
-             $stmt = $pdo->prepare("UPDATE users SET nama=?, email=?, role=?, status=? WHERE id=?");
-             $stmt->execute([$nama, $email, $role, $status, $id]);
-        } else {
-             // Fallback if status column doesn't exist yet (though it should)
-             $stmt = $pdo->prepare("UPDATE users SET nama=?, email=?, role=? WHERE id=?");
-             $stmt->execute([$nama, $email, $role, $id]);
-        }
+        // Update user (Transaction handled inside Model)
+        $userModel->update($id, $nama, $email, $role, $data);
         header("Location: index.php?msg=updated");
         exit;
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         $error = "Update Gagal: " . $e->getMessage();
     }
 }
@@ -59,74 +65,154 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style> body { font-family: 'Outfit', sans-serif; } </style>
 </head>
-<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 min-h-screen p-8 flex items-center justify-center">
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen p-8 flex items-center justify-center font-outfit">
 
-<div class="w-full max-w-lg bg-white p-8 rounded-3xl shadow-2xl">
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen"></div>
+        <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
+    </div>
 
-    <div class="mb-6">
-        <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-gray-400 hover:text-blue-600 mb-2 transition text-sm font-semibold group">
-             <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-             Kembali
-        </a>
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-800">Edit Pengguna</h2>
-            <a href="index.php" class="text-gray-400 hover:text-red-500 transition">✕</a>
-        </div>    </div>
+    <div class="w-full max-w-xl glass p-10 rounded-[2.5rem] shadow-2xl relative z-10 border border-white/20 overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500"></div>
 
-    <?php if ($error): ?>
-        <div class="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-sm"><?= $error ?></div>
-    <?php endif; ?>
-
-    <form method="POST" class="space-y-5">
-        <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Nama Lengkap</label>
-            <input type="text" name="nama" required placeholder="Nama User" 
-                   value="<?= htmlspecialchars($currentUser['nama']) ?>" 
-                   class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-        </div>
-
-        <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Email</label>
-            <input type="email" name="email" required placeholder="Email" 
-                   value="<?= htmlspecialchars($currentUser['email']) ?>" 
-                   class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
+        <div class="flex justify-between items-center mb-10">
             <div>
-                <label class="block text-sm font-semibold text-gray-600 mb-1">Role</label>
-                <select name="role" required 
-                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-                    <option value="admin" <?= $currentUser['role']=='admin'?'selected':'' ?>>Admin</option>
-                    <option value="dosen" <?= $currentUser['role']=='dosen'?'selected':'' ?>>Dosen</option>
-                    <option value="mahasiswa" <?= $currentUser['role']=='mahasiswa'?'selected':'' ?>>Mahasiswa</option>
-                </select>
+                <h2 class="text-3xl font-bold text-white tracking-tight">Edit Pengguna</h2>
+                <p class="text-blue-300/60 text-sm mt-1">Perbarui informasi kredensial dan profil user.</p>
             </div>
-            
-            <?php if(isset($currentUser['status'])): ?>
-            <div>
-                <label class="block text-sm font-semibold text-gray-600 mb-1">Status Akun</label>
-                <select name="status" required 
-                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-                    <option value="active" <?= $currentUser['status']=='active'?'selected':'' ?>>Active (Bisa Login)</option>
-                    <option value="pending" <?= $currentUser['status']=='pending'?'selected':'' ?>>Pending (Ditolak)</option>
-                </select>
-            </div>
-            <?php else: ?>
-                <input type="hidden" name="status" value="active">
-            <?php endif; ?>
-        </div>
-
-        <div class="flex gap-3 pt-4">
-            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-lg transition">
-                Update Data
-            </button>
-            <a href="index.php" class="px-6 py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold transition">
-                Batal
+            <a href="index.php" class="w-10 h-10 rounded-xl glass flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all border border-white/10 group">
+                <span class="group-hover:rotate-90 transition-transform duration-300">✕</span>
             </a>
         </div>
-    </form>
 
-</div>
+        <?php if ($error): ?>
+            <div class="bg-red-500/10 text-red-300 p-4 rounded-2xl mb-8 text-sm border border-red-500/20 flex items-center gap-3 font-bold">
+                <span class="text-xl">⚠️</span> <?= $error ?>
+            </div>
+        <?php endif; ?>
+
+        <form method="POST" class="space-y-6">
+            <div class="space-y-2">
+                <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Nama Lengkap</label>
+                <input type="text" name="nama" required placeholder="Nama User" 
+                       value="<?= htmlspecialchars($currentUser['nama']) ?>" 
+                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 transition-all">
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Alamat Email</label>
+                <input type="email" name="email" required placeholder="Email" 
+                       value="<?= htmlspecialchars($currentUser['email']) ?>" 
+                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 transition-all">
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Hak Akses</label>
+                    <div class="relative">
+                        <select name="role" id="roleSelect" required 
+                                class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white bg-slate-800/80 border-white/10 appearance-none cursor-pointer">
+                            <option value="admin" <?= $currentUser['role']=='admin'?'selected':'' ?>>Administrator</option>
+                            <option value="dosen" <?= $currentUser['role']=='dosen'?'selected':'' ?>>Dosen Pengajar</option>
+                            <option value="mahasiswa" <?= $currentUser['role']=='mahasiswa'?'selected':'' ?>>Mahasiswa</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Status Keaktifan</label>
+                    <div class="relative">
+                        <select name="status" required 
+                                class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white bg-slate-800/80 border-white/10 appearance-none cursor-pointer">
+                            <option value="active" <?= ($currentUser['status'] ?? 'active') =='active'?'selected':'' ?>>Active / Terverifikasi</option>
+                            <option value="pending" <?= ($currentUser['status'] ?? 'active') =='pending'?'selected':'' ?>>Pending / Suspended</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Fields -->
+            <div id="mahasiswaFields" class="hidden space-y-6 bg-white/5 p-6 rounded-[2rem] border border-white/10 animate-fade-in">
+                 <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Nomor Induk Mahasiswa (NIM)</label>
+                    <input type="text" name="nim" value="<?= htmlspecialchars($currentUser['nim'] ?? '') ?>"
+                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10">
+                </div>
+                
+                 <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Program Studi</label>
+                    <div class="relative">
+                        <select name="prodi_id" 
+                                class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white bg-slate-800/80 border-white/10 appearance-none cursor-pointer">
+                            <option value="">-- Pilih Prodi --</option>
+                            <?php foreach ($prodiList as $p): ?>
+                                <option value="<?= $p['id_prodi'] ?>" <?= ($currentUser['prodi_id'] ?? '') == $p['id_prodi'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($p['nama_prodi']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dosenFields" class="hidden space-y-6 bg-white/5 p-6 rounded-[2rem] border border-white/10 animate-fade-in">
+                 <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">NIDN</label>
+                    <input type="text" name="nidn" value="<?= htmlspecialchars($currentUser['nidn'] ?? '') ?>"
+                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10">
+                </div>
+                 <div class="space-y-2">
+                    <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">NIP (Optional)</label>
+                    <input type="text" name="nip" value="<?= htmlspecialchars($currentUser['nip'] ?? '') ?>"
+                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10">
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-6">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-4 rounded-2xl font-bold shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10">
+                    Update Perubahan
+                </button>
+                <a href="index.php" class="px-8 py-4 rounded-2xl glass text-slate-300 hover:bg-white/20 font-bold transition flex items-center border border-white/10">
+                    Batalkan
+                </a>
+            </div>
+        </form>
+    </div>
+
+<script>
+    const roleSelect = document.getElementById('roleSelect');
+    const mahasiswaFields = document.getElementById('mahasiswaFields');
+    const dosenFields = document.getElementById('dosenFields');
+
+    function updateFields() {
+        const role = roleSelect.value;
+        if (role === 'mahasiswa') {
+            mahasiswaFields.classList.remove('hidden');
+            dosenFields.classList.add('hidden');
+        } else if (role === 'dosen') {
+            dosenFields.classList.remove('hidden');
+            mahasiswaFields.classList.add('hidden');
+        } else {
+            mahasiswaFields.classList.add('hidden');
+            dosenFields.classList.add('hidden');
+        }
+    }
+
+    // Initialize on load
+    updateFields();
+    
+    // Listen for changes
+    roleSelect.addEventListener('change', updateFields);
+</script>
+
 </body>
 </html>

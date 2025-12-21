@@ -1,193 +1,134 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-function isActive($path) {
-    global $current_page;
-    return $current_page == basename($path);
-}
+$uri = $_SERVER['REQUEST_URI'];
+
+// Determine path prefix (for pages in subfolders like admin/user/)
+// Use a more robust way to detect if we are in a subfolder of admin
+$normalized_path = str_replace('\\', '/', $_SERVER['PHP_SELF']);
+$is_sub = basename(dirname($normalized_path)) !== 'admin';
+$prefix = $is_sub ? '../' : './';
 ?>
-<!-- Mobile Menu Button -->
-<button id="mobile-menu-btn" class="fixed top-4 left-4 z-[60] p-3 bg-[#543abb] rounded-xl text-white md:hidden shadow-lg transition-all active:scale-95 border border-white/20">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
-</button>
-
-<!-- Sidebar Overlay -->
-<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
-
-<!-- Sidebar -->
-<aside id="sidebar" class="fixed inset-y-0 left-0 w-20 md:w-20 sidebar flex flex-col z-50 transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out bg-[#3e2b85] text-white group collapsed shadow-2xl">
-    
-    <!-- Branding / Header -->
-    <div class="p-6 flex items-center justify-center h-24 border-b border-white/10 relative">
-        <div class="flex items-center gap-3 overflow-hidden whitespace-nowrap transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
-                 <img src="<?= BASE_URL ?>/assets/img/logo_task_academia.jpg" alt="Logo" class="w-full h-full object-cover">
+<!-- Admin Sidebar - Premium Glass Theme -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-64 backdrop-blur-2xl bg-slate-900/80 border-r border-white/10 flex flex-col z-50 transform -translate-x-full md:translate-x-0 md:relative md:shadow-none transition-transform duration-300 ease-in-out shadow-2xl text-white">
+    <!-- Header -->
+    <div class="h-20 flex items-center px-6 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/20">
+                <span class="text-2xl">⚡</span>
             </div>
-            <div class="sidebar-text transition-all duration-300 opacity-100 group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 group-[.collapsed]:invisible">
-                <h2 class="text-lg font-bold text-white tracking-tight">TaskAcademia</h2>
-                <p class="text-[10px] uppercase text-indigo-200 tracking-wider">Admin Panel</p>
+            <div>
+                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademy</h2>
+                <p class="text-blue-400 text-[9px] font-extrabold uppercase tracking-[0.2em]">System Admin</p>
             </div>
         </div>
-        
-        <!-- Desktop Toggle Button -->
-        <button id="desktop-toggle-btn" class="hidden md:flex absolute -right-3 top-9 bg-white text-[#3e2b85] w-6 h-6 items-center justify-center rounded-full shadow-md hover:bg-gray-100 transition-all z-50 border border-gray-100 transform active:scale-95 group/btn">
-            <svg class="w-4 h-4 transition-transform duration-500 transform group-[.collapsed]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-        </button>
-
-        <!-- Mobile Close Button -->
-        <button id="close-sidebar-btn" class="md:hidden absolute right-4 text-white hover:text-gray-200">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
     </div>
-    
+
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-6 px-3 space-y-2 custom-scrollbar">
+    <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
         
-        <a href="<?= BASE_URL ?>/views/admin/dashboard_admin.php" class="flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group/link relative <?= isActive('dashboard_admin.php') ? 'bg-[#543abb] text-white shadow-lg' : 'hover:bg-[#4a339b] text-indigo-100' ?>">
-            <span class="text-xl min-w-[24px] text-center">🏠</span>
-            <span class="sidebar-text whitespace-nowrap font-medium text-sm transition-all group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 overflow-hidden">Dashboard</span>
-             <!-- Tooltip for collapsed state -->
-            <div class="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-[.collapsed]:group-hover/link:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl">Dashboard</div>
+        <a href="<?= $prefix ?>dashboard_admin.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'dashboard_admin.php' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">🏠</span>
+            <span class="text-sm">Dashboard</span>
         </a>
 
-        <div class="my-4 border-t border-white/10 group-[.collapsed]:mx-2"></div>
-         <div class="px-3 mb-2 text-[10px] font-bold uppercase text-indigo-300 tracking-wider transition-opacity group-[.collapsed]:hidden">Menu Utama</div>
-        
-        <?php foreach ([
-            'user/index.php' => ['icon' => '👥', 'label' => 'Users'],
-            'mk/index.php' => ['icon' => '📚', 'label' => 'Mata Kuliah'],
-            'kelas/index.php' => ['icon' => '🎓', 'label' => 'Kelas'],
-            'prodi/index.php' => ['icon' => '🏫', 'label' => 'Prodi'],
-            'angkatan/index.php' => ['icon' => '🗓️', 'label' => 'Angkatan'],
-            'assign_mahasiswa.php' => ['icon' => '📝', 'label' => 'Enrollment'],
-            'assign_dosen.php' => ['icon' => '👨‍🏫', 'label' => 'Penugasan'],
-        ] as $file => $data): 
-            $url = BASE_URL . '/views/admin/' . $file;
-            $active = isActive($file);
-        ?>
-            <a href="<?= $url ?>" class="flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group/link relative <?= $active ? 'bg-[#543abb] text-white shadow-lg' : 'hover:bg-[#4a339b] text-indigo-100' ?>">
-                <span class="text-xl min-w-[24px] text-center"><?= $data['icon'] ?></span>
-                <span class="sidebar-text whitespace-nowrap font-medium text-sm transition-all group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 overflow-hidden"><?= $data['label'] ?></span>
-                 <!-- Tooltip -->
-                 <div class="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-[.collapsed]:group-hover/link:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl"><?= $data['label'] ?></div>
-            </a>
-        <?php endforeach; ?>
+        <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-2 uppercase tracking-widest">Master Data</p>
 
-        <!-- Laporan -->
-        <p class="text-xs font-bold text-indigo-300 px-3 mt-6 mb-2 uppercase tracking-wider transition-all duration-300 group-[.collapsed]:hidden">Laporan</p>
-        <a href="<?= BASE_URL ?>/views/admin/analytics.php" class="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group/link relative <?= isActive('analytics.php') ? 'bg-[#543abb] text-white shadow-lg' : 'hover:bg-[#4a339b] text-indigo-100' ?>">
-            <span class="text-xl min-w-[24px] text-center">📊</span>
-            <span class="sidebar-text whitespace-nowrap font-medium text-sm transition-all group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 overflow-hidden">Analitik & CSV</span>
-             <div class="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-[.collapsed]:group-hover/link:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl">Analitik & CSV</div>
+        <a href="<?= $prefix ?>user/index.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= strpos($uri, '/user/') !== false ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">👥</span>
+            <span class="text-sm">Pengguna</span>
+        </a>
+        
+        <a href="<?= $prefix ?>mk/index.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= strpos($uri, '/mk/') !== false ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">📚</span>
+            <span class="text-sm">Mata Kuliah</span>
         </a>
 
-        <!-- Logout -->
-        <a href="<?= BASE_URL ?>/logout.php" class="flex items-center gap-3 px-3 py-3 rounded-xl text-red-300 hover:bg-red-500/20 hover:text-red-100 font-medium transition mt-10 group/link relative">
-            <span class="text-xl min-w-[24px] text-center">🚪</span>
-            <span class="sidebar-text whitespace-nowrap transition-all duration-300 opacity-100 group-[.collapsed]:opacity-0 group-[.collapsed]:w-0 overflow-hidden">Logout</span>
-             <!-- Tooltip -->
-            <div class="absolute left-14 bg-red-900 text-white text-xs px-2 py-1 rounded opacity-0 group-[.collapsed]:group-hover/link:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-red-700 whitespace-nowrap z-50">
-                Logout
-            </div>
+        <a href="<?= $prefix ?>kelas/index.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= strpos($uri, '/kelas/') !== false ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">🏢</span>
+            <span class="text-sm">Kelas</span>
+        </a>
+        
+        <a href="<?= $prefix ?>prodi/index.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= strpos($uri, '/prodi/') !== false ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">🏛️</span>
+            <span class="text-sm">Program Studi</span>
+        </a>
+
+        <a href="<?= $prefix ?>angkatan/index.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= strpos($uri, '/angkatan/') !== false ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">📅</span>
+            <span class="text-sm">Angkatan</span>
+        </a>
+
+        <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-2 uppercase tracking-widest">Akademik</p>
+
+        <a href="<?= $prefix ?>assign_mahasiswa.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'assign_mahasiswa.php' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">✏️</span>
+            <span class="text-sm">Peserta Kelas</span>
+        </a>
+
+        <a href="<?= $prefix ?>assign_dosen.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'assign_dosen.php' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">👨‍🏫</span>
+            <span class="text-sm">Penugasan Dosen</span>
+        </a>
+
+        <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-2 uppercase tracking-widest">Laporan</p>
+        
+        <a href="<?= $prefix ?>analytics.php" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl transition transform md:hover:scale-[1.02] group <?= $current_page == 'analytics.php' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10' : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium' ?>">
+            <span class="text-lg group-hover:scale-110 transition">📊</span>
+            <span class="text-sm">Analitik</span>
         </a>
     </nav>
+
 </aside>
 
+<!-- Mobile Header -->
+<div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900/90 backdrop-blur-md border-b border-white/10 z-40 flex items-center px-4 justify-between shadow-xl">
+    <button id="mobileMenuOpen" class="p-2 -ml-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+    <div class="flex items-center gap-2">
+         <div class="bg-blue-600/20 p-1.5 rounded-lg border border-blue-500/20">
+             <span class="text-xl">⚡</span>
+         </div>
+         <span class="font-bold text-white tracking-tight">TaskAcademia</span>
+    </div>
+    <div class="w-8"></div>
+</div>
+
+<!-- Mobile Overlay -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-30 hidden transition-opacity duration-300 opacity-0 md:hidden"></div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-        const desktopToggleBtn = document.getElementById('desktop-toggle-btn');
-        const mainContent = document.getElementById('main-content');
-        const isMobile = () => window.innerWidth < 768;
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const openBtn = document.getElementById('mobileMenuOpen');
 
-        // FIXED: Robust Mobile Toggle
-        function toggleMobileSidebar() {
-            const isClosed = sidebar.classList.contains('-translate-x-full');
-            if (isClosed) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-                document.body.classList.add('overflow-hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => { 
-                    overlay.classList.add('hidden'); 
-                    document.body.classList.remove('overflow-hidden'); 
-                }, 300);
-            }
+    function toggleSidebar() {
+        const isHidden = sidebar.classList.contains('-translate-x-full');
+        
+        if (isHidden) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.add('opacity-100'), 10);
+            document.body.style.overflow = 'hidden';
+        } else {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
         }
+    }
 
-        // FIXED: Desktop Toggle with State Maintenance
-        function toggleDesktopCollapse() {
-            if (isMobile()) return;
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            
-            sidebar.classList.toggle('collapsed');
-            sidebar.classList.toggle('w-72'); // Original width
-            sidebar.classList.toggle('w-20');
-            sidebar.classList.toggle('md:w-72'); // Original width
-            sidebar.classList.toggle('md:w-20');
-            
-            if (mainContent) {
-                if (isCollapsed) {
-                    mainContent.classList.remove('md:ml-20');
-                    mainContent.classList.add('md:ml-72');
-                } else {
-                    mainContent.classList.remove('md:ml-72');
-                    mainContent.classList.add('md:ml-20');
-                }
-            }
-            localStorage.setItem('sidebar_collapsed_admin', !isCollapsed);
-        }
-
-        mobileMenuBtn?.addEventListener('click', toggleMobileSidebar);
-        overlay?.addEventListener('click', toggleMobileSidebar);
-        closeSidebarBtn?.addEventListener('click', toggleMobileSidebar);
-        desktopToggleBtn?.addEventListener('click', toggleDesktopCollapse);
-
-        // Responsive Reset
-        function handleResize() {
-             if (!isMobile()) {
-                overlay.classList.add('hidden', 'opacity-0');
-                document.body.classList.remove('overflow-hidden');
-                sidebar.classList.remove('-translate-x-full');
-                
-                const savedState = localStorage.getItem('sidebar_collapsed_admin');
-                if (savedState === 'false') {
-                     sidebar.classList.remove('collapsed', 'w-20', 'md:w-20');
-                     sidebar.classList.add('w-72', 'md:w-72');
-                     if (mainContent) { mainContent.classList.remove('md:ml-20'); mainContent.classList.add('md:ml-72'); }
-                } else {
-                     sidebar.classList.add('collapsed', 'w-20', 'md:w-20');
-                     sidebar.classList.remove('w-72', 'md:w-72');
-                     if (mainContent) { mainContent.classList.remove('md:ml-72'); mainContent.classList.add('md:ml-20'); }
-                }
-            } else {
-                sidebar.classList.remove('w-20', 'md:w-20', 'w-72', 'md:w-72', 'collapsed');
-                sidebar.classList.add('w-64');
-                if (mainContent) { mainContent.classList.remove('md:ml-20', 'md:ml-72'); mainContent.classList.add('ml-0'); }
-
-                if (!overlay.classList.contains('hidden')) {
-                     sidebar.classList.remove('-translate-x-full');
-                } else {
-                     sidebar.classList.add('-translate-x-full');
-                }
-            }
-        }
-
-        window.addEventListener('resize', handleResize);
-        setTimeout(handleResize, 100);
-    });
+    if (openBtn) openBtn.addEventListener('click', toggleSidebar);
+    if (overlay) overlay.addEventListener('click', toggleSidebar);
 </script>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
-    #main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    aside#sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-</style>
