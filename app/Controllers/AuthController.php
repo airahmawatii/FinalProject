@@ -46,7 +46,7 @@ class AuthController
     public function googleLogin()
     {
         require_once __DIR__ . '/../Services/GoogleClientService.php';
-        $service = new GoogleClientService();
+        $service = new GoogleClientService(true); // Force OAuth for Login
         $client = $service->getClient();
         
         $authUrl = $client->createAuthUrl();
@@ -57,7 +57,7 @@ class AuthController
     public function googleCallback()
     {
         require_once __DIR__ . '/../Services/GoogleClientService.php';
-        $service = new GoogleClientService();
+        $service = new GoogleClientService(true); // Force OAuth for Login
         $client = $service->getClient();
 
         if (isset($_GET['code'])) {
@@ -73,7 +73,10 @@ class AuthController
                 $email = $google_account_info->email;
                 $name = $google_account_info->name;
 
-                // Domain Validation
+                // --- VALIDASI DOMAIN KAMPUS ---
+                // Kita cek domain emailnya untuk menentukan ROLE otomatis.
+                // - @mhs.ubpkarawang.ac.id -> Mahasiswa
+                // - @ubpkarawang.ac.id -> Dosen
                 $domain = substr(strrchr($email, "@"), 1);
                 $role = '';
 
@@ -108,10 +111,11 @@ class AuthController
                     $random_password = bin2hex(random_bytes(8));
                     $hashed_password = password_hash($random_password, PASSWORD_DEFAULT);
                     
-                    // Create user first
+                    // Buat user baru di database
                     if ($this->model->create($name, $email, $hashed_password, $role)) {
                         $user = $this->model->findByEmail($email);
-                        // Save Tokens
+                        // Simpan Token Google (Penting untuk Calendar Sync!)
+                        // Access Token & Refresh Token disimpan agar "Robot" bisa akses kalender nanti.
                         $this->model->updateGoogleTokens($user['id'], $access_token, $refresh_token, $token_expires);
                     } else {
                         $error = "Gagal mendaftarkan user baru.";

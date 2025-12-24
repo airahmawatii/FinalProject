@@ -18,10 +18,18 @@ $notifier = new NotificationService($pdo);
 $today = date('Y-m-d');
 $tomorrow = date('Y-m-d', strtotime('+1 day'));
 
+// -------------------------------------------------------------------------
+// 1. Tentukan Rentang Waktu
+// -------------------------------------------------------------------------
+// Kita cari tugas yang deadline-nya:
+// - HARI INI ($today)
+// - BESOK ($tomorrow)
 echo "[" . date('Y-m-d H:i:s') . "] Starting Deadline Reminder Script (H-1 & Hari H)...\n";
 echo "Checking for deadlines on: $today (Hari H) and $tomorrow (H-1)\n";
 
-// 2. Query for tasks due today or tomorrow
+// -------------------------------------------------------------------------
+// 2. Query Database untuk Cari Tugas
+// -------------------------------------------------------------------------
 $sql = "
     SELECT 
         t.id,

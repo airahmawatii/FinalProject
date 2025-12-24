@@ -24,6 +24,10 @@ class CourseController
     // ================================
     // 1. INDEX (Daftar Mata Kuliah)
     // ================================
+    /**
+     * Menampilkan semua mata kuliah
+     * View: /views/courses/index.php
+     */
     public function index()
     {
         $courses = $this->model->getAll();
@@ -33,6 +37,10 @@ class CourseController
     // ================================
     // 2. TAMBAH MATA KULIAH
     // ================================
+    /**
+     * Form Tambah Matkul & Proses Simpan
+     * Termasuk menyimpan relasi Dosen Pengajar (Pivot Table)
+     */
     public function add()
     {
         // Ambil daftar dosen
@@ -61,6 +69,9 @@ class CourseController
     // ================================
     // 3. EDIT MATA KULIAH
     // ================================
+    /**
+     * Edit data mata kuliah dan update dosen pengajarnya
+     */
     public function edit()
     {
         $id = $_GET['id'];
@@ -98,6 +109,9 @@ class CourseController
     // ================================
     // 4. HAPUS MATA KULIAH
     // ================================
+    /**
+     * Hapus mata kuliah beserta relasinya di tabel dosen_courses
+     */
     public function delete()
     {
         $id = $_GET['id'];

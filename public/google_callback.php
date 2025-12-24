@@ -22,7 +22,7 @@ if (!isset($_SESSION['user'])) {
 
 // BINDING FLOW (Existing Logic)
 if (isset($_GET['code'])) {
-    $service = new GoogleClientService();
+    $service = new GoogleClientService(true); // Force OAuth for Account Binding
     $client = $service->getClient();
 
     try {

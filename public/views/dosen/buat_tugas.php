@@ -15,12 +15,14 @@ require_once __DIR__ . '/../../../app/Models/TaskModel.php';
 require_once __DIR__ . '/../../../app/Models/EnrollmentModel.php';
 require_once __DIR__ . '/../../../app/Services/NotificationService.php';
 
+// --- 1. INISIALISASI & KONEKSI ---
 $db = new Database();
 $pdo = $db->connect();
 $courseModel = new CourseModel($pdo);
 $taskModel = new TaskModel($pdo);
 $enrollModel = new EnrollmentModel($pdo);
 
+// Ambil daftar mata kuliah yang diampu oleh Dosen yang sedang login
 $courses = $courseModel->getByDosen($_SESSION['user']['id']);
 $error = "";
 $success = "";
@@ -35,10 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$title || !$deadline) {
         $error = "Judul dan deadline wajib diisi.";
     } else {
+        // --- 2. UPLOAD FILE LAMPIRAN ---
         $attachment = null;
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../../uploads/tasks/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            
+            // Rename file dengan timestamp agar unik
             $fileName = time() . '_' . $_FILES['attachment']['name'];
             if (move_uploaded_file($_FILES['attachment']['tmp_name'], $uploadDir . $fileName)) {
                 $attachment = $fileName;
@@ -46,17 +51,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (!$error) {
+            // --- 3. SIMPAN TUGAS KE DATABASE ---
             if ($taskModel->create($_SESSION['user']['id'], $course_id, $title, $description, $deadline, $attachment)) {
                 
-                // NOTIFICATION LOGIC
+                // --- 4. KIRIM EMAIL NOTIFIKASI OTOMATIS ---
+                // Setiap tugas baru akan memicu pengiriman email ke seluruh mahasiswa di kelas tersebut.
+                
+                // Inisialisasi Service Notifikasi
                 $notifier = new NotificationService($pdo);
                 $senderName = $_SESSION['user']['nama'];
                 
-                // Fetch course info
+                // Ambil Nama Matkul untuk keperluan email
                 $course = $courseModel->find($course_id);
                 $courseName = $course['name'] ?? 'Mata Kuliah';
 
-                // Send to ALL STUDENTS enrolled
+                // Ambil daftar mahasiswa yang mengambil course ini
                 $students = $enrollModel->getStudentsByCourse($course_id);
                 $sentCount = 0;
 
@@ -67,33 +76,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $attachmentHtml = $attachment ? "<p style='margin-top:10px; font-size:12px; color:#475569;'>📎 Ada Lampiran File</p>" : "";
 
                     $emailBody = "
-                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
-                        <div style='background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 40px 30px; text-align: center;'>
-                            <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>Tugas Baru 🚀</h1>
-                            <p style='color: #bfdbfe; margin-top: 5px; font-size: 14px;'>{$courseName}</p>
+                    <div style='font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; color: #334155;'>
+                        <div style='background-color: #f8fafc; padding: 25px 30px; border-bottom: 1px solid #e2e8f0;'>
+                            <h1 style='color: #0f172a; margin: 0; font-size: 20px; font-weight: 700;'>Tugas Baru</h1>
+                            <p style='color: #64748b; margin-top: 5px; font-size: 14px;'>{$courseName}</p>
                         </div>
                         <div style='padding: 30px; background: #ffffff;'>
-                            <p style='color: #334155; font-size: 16px; line-height: 1.6;'>
-                                Halo Mahasiswa,<br>
-                                <strong>{$senderName}</strong> baru saja memberikan tugas baru yang perlu kamu selesaikan.
+                            <p style='font-size: 15px; line-height: 1.6; margin-bottom: 20px;'>
+                                Halo Mahasiswa,<br><br>
+                                <strong>{$senderName}</strong> telah menerbitkan tugas baru. Silakan cek detail berikut:
                             </p>
-                            <div style='background: #f8fafc; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin: 25px 0;'>
-                                <h3 style='margin: 0 0 5px 0; color: #1e293b; font-size: 18px;'>{$title}</h3>
-                                <p style='margin: 0 0 15px 0; font-size: 14px; color: #64748b;'>{$courseName}</p>
-                                <div style='border-top: 1px dashed #cbd5e1; padding-top: 15px; margin-top: 15px;'>
-                                    <p style='margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;'>Deadline</p>
-                                    <h2 style='margin: 0; color: #dc2626; font-size: 20px;'>{$deadlineTgl}</h2>
-                                    <p style='margin: 0; color: #dc2626; font-weight: bold;'>Pukul {$deadlineJam} WIB</p>
+                            <div style='background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 25px;'>
+                                <h3 style='margin: 0 0 10px 0; color: #0f172a; font-size: 16px;'>{$title}</h3>
+                                <div style='font-size: 14px; color: #475569;'>
+                                    <p style='margin: 5px 0;'><strong>Tenggat Waktu:</strong> <span style='color: #dc2626;'>{$deadlineTgl}, Pukul {$deadlineJam} WIB</span></p>
                                 </div>
                                 {$attachmentHtml}
                             </div>
-                            <p style='color: #64748b; font-size: 14px; margin-bottom: 30px;'><em>\"" . strip_tags($description) . "\"</em></p>
+                            <p style='color: #475569; font-size: 14px; margin-bottom: 30px; font-style: italic; border-left: 3px solid #cbd5e1; padding-left: 15px;'>
+                                \"" . strip_tags($description) . "\"
+                            </p>
                             <div style='text-align: center;'>
-                                <a href='" . BASE_URL . "/index.php' style='background-color: #2563EB; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);'>Buka Dashboard</a>
+                                <a href='" . BASE_URL . "/index.php' style='background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;'>Lihat di Dashboard</a>
                             </div>
                         </div>
-                        <div style='background: #f1f5f9; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8;'>
-                            &copy; " . date('Y') . " TaskAcademia - Universitas Buana Perjuangan Karawang
+                        <div style='background: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;'>
+                            TaskAcademia - Universitas Buana Perjuangan Karawang<br>
+                            &copy; " . date('Y') . "
                         </div>
                     </div>";
 
@@ -235,13 +244,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="flex flex-col md:flex-row gap-4 pt-6">
-                        <button type="submit" class="flex-1 relative group overflow-hidden rounded-2xl">
-                             <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 group-hover:from-blue-500 group-hover:to-indigo-500 transition-all"></div>
-                             <div class="relative py-4.5 flex items-center justify-center gap-3 text-white font-extrabold text-lg">
-                                <span>🚀 Publikasikan Tugas</span>
+                        <button type="submit" class="flex-1 relative group overflow-hidden rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all duration-300">
+                             <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 group-hover:from-blue-500 group-hover:to-indigo-500 transition-all duration-300"></div>
+                             <div class="relative py-4 flex items-center justify-center gap-2 text-white font-semibold text-lg tracking-wide">
+                                <span>Publikasikan Tugas</span>
                              </div>
                         </button>
-                        <a href="dashboard.php" class="px-10 py-4.5 rounded-2xl glass text-slate-300 hover:bg-white/10 font-bold transition-all flex items-center justify-center border border-white/10">
+                        <a href="dashboard.php" class="px-10 py-4 rounded-2xl glass text-slate-300 hover:bg-white/10 font-bold transition-all flex items-center justify-center border border-white/10">
                             Batal
                         </a>
                     </div>

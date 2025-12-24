@@ -6,6 +6,9 @@ class UserModel {
         $this->pdo = $pdo;
     }
 
+    /**
+     * Cari user berdasarkan Email (Untuk Login)
+     */
     public function findByEmail($email) {
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email=?");
         $stmt->execute([$email]);
@@ -55,6 +58,10 @@ class UserModel {
         return $stmt->execute([$id]);
     }
 
+    /**
+     * Aktifkan user yang statusnya masih 'pending'
+     * Biasanya dipanggil oleh Admin setelah verifikasi manual
+     */
     public function activateUser($id, $role) {
         $stmt = $this->pdo->prepare("UPDATE users SET status='active', role=? WHERE id=?");
         return $stmt->execute([$role, $id]);
@@ -64,11 +71,16 @@ class UserModel {
         return $this->pdo->query("SELECT * FROM users WHERE status='pending'")->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Simpan/Update Token Google OAuth untuk akses API Google Calendar
+     * Refresh Token hanya disimpan jika ada (biasanya saat pertama kali connect)
+     */
     public function updateGoogleTokens($id, $accessToken, $refreshToken, $expires) {
         if ($refreshToken) {
             $stmt = $this->pdo->prepare("UPDATE users SET access_token=?, refresh_token=?, token_expires=? WHERE id=?");
             return $stmt->execute([$accessToken, $refreshToken, $expires, $id]);
         } else {
+            // Jika refresh token null (re-login biasa), jangan timpa refresh token lama yang mungkin masih valid
             $stmt = $this->pdo->prepare("UPDATE users SET access_token=?, token_expires=? WHERE id=?");
             return $stmt->execute([$accessToken, $expires, $id]);
         }

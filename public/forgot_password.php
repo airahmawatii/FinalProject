@@ -15,27 +15,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $db = new Database();
     $pdo = $db->connect();
     
-    // 1. Check if email exists
+    // 1. Cek apakah email terdaftar
     $stmt = $pdo->prepare("SELECT id, nama FROM users WHERE email = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     
     if ($user) {
-        // 2. Generate Token
+        // 2. Buat Token Random
         $token = bin2hex(random_bytes(32));
         $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
         
-        // 3. Save to password_resets table (Create if not exists handling?)
-        // Assuming table exists as per guide. If not, we might need to create it.
+        // 3. Simpan ke tabel password_resets
+        // Hapus token lama jika ada, lalu buat yang baru
         try {
-            // Cleanup old tokens
+            // Hapus token lama
             $pdo->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$email]);
             
-            // Insert new
+            // Simpan token baru
             $insert = $pdo->prepare("INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, NOW())");
             $insert->execute([$email, $token]);
             
-            // 4. Send Email
+            // 4. Kirim Email Notifikasi
             $resetLink = BASE_URL . "/reset_password.php?token=" . $token;
             
             $notif = new NotificationService($pdo);
@@ -50,18 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
             ";
             
-            // User ID required for logging, we have it from $user['id']
+            // Ambil ID User untuk log pengiriman email
             $notif->sendEmail($user['id'], $email, $subject, $body);
             
             $message = "Link reset password telah dikirim ke email Anda.";
             
         } catch (Exception $e) {
-            // Ideally don't show specific SQL errors to user
+            // Jangan tampilkan detail error SQL ke pengguna demi keamanan
             $error = "Terjadi kesalahan sistem. Pastikan tabel database sudah siap.";
-            // For debugging: $error .= " " . $e->getMessage();
+            // Untuk debugging: $error .= " " . $e->getMessage();
         }
     } else {
-        // Security: Don't reveal email existence, but for UX maybe just say sent
+        // Keamanan: Jangan beritahu jika email tidak ditemukan, tapi secara UX mungkin lebih baik bilang terkirim
         $message = "Jika email terdaftar, link reset akan dikirim.";
     }
 }

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../../app/config/config.php';
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
-<!-- Sidebar Mahasiswa - Premium Glass Theme -->
+<!-- Sidebar Mahasiswa - Navigasi Utama -->
 <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 backdrop-blur-2xl bg-slate-900/80 border-r border-white/10 flex flex-col z-50 transform -translate-x-full md:translate-x-0 md:relative md:shadow-none transition-transform duration-300 ease-in-out shadow-2xl text-white">
     <!-- Header Logo -->
     <div class="h-20 flex items-center px-6 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
@@ -60,7 +60,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </div>
         <a href="<?= BASE_URL ?>/logout.php" class="flex items-center justify-center gap-2 w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 rounded-xl text-xs font-bold transition shadow-lg">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-            Sign Out
+            Keluar
         </a>
     </div>
 </aside>

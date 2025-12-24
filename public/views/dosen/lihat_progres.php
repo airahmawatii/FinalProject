@@ -18,22 +18,30 @@ $taskModel = new TaskModel($pdo);
 
 $taskId = $_GET['id'] ?? null;
 if (!$taskId) {
-    die("Task ID not provided.");
+    header("Location: daftar_tugas.php?msg=invalid_task");
+    exit;
 }
 
-// Get Task Details
-$stmt = $pdo->prepare("SELECT t.*, c.name as course_name FROM tasks t JOIN courses c ON c.id = t.course_id WHERE t.id = ?");
-$stmt->execute([$taskId]);
-$taskDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+// Get Task Details with error handling
+try {
+    $stmt = $pdo->prepare("SELECT t.*, c.name as course_name FROM tasks t JOIN courses c ON c.id = t.course_id WHERE t.id = ?");
+    $stmt->execute([$taskId]);
+    $taskDetails = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$taskDetails || $taskDetails['dosen_id'] != $_SESSION['user']['id']) {
-    die("Tugas tidak ditemukan atau akses ditolak.");
+    if (!$taskDetails || $taskDetails['dosen_id'] != $_SESSION['user']['id']) {
+        header("Location: daftar_tugas.php?msg=access_denied");
+        exit;
+    }
+
+    $students = $taskModel->getTaskProgress($taskId);
+    $total = count($students);
+    $completed = count(array_filter($students, fn($s) => $s['completed_at']));
+    $percentage = $total > 0 ? round(($completed / $total) * 100) : 0;
+} catch (PDOException $e) {
+    error_log("Error fetching task progress: " . $e->getMessage());
+    header("Location: daftar_tugas.php?msg=error");
+    exit;
 }
-
-$students = $taskModel->getTaskProgress($taskId);
-$total = count($students);
-$completed = count(array_filter($students, fn($s) => $s['completed_at']));
-$percentage = $total > 0 ? round(($completed / $total) * 100) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="id">

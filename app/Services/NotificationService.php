@@ -18,7 +18,8 @@ class NotificationService
 
     private function setupMailer()
     {
-        // Ensure Env is loaded if not already
+        // 1. Pastikan Environment Variables Terload
+        // Jika $_ENV kosong, kita load manual pake Dotenv
         if (empty($_ENV['SMTP_HOST'])) {
             $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
             $dotenv->safeLoad();
@@ -59,11 +60,18 @@ class NotificationService
     }
 
     /**
-     * Send email and log to database
+     * Kirim email dan catat history-nya ke database
+     * 
+     * @param int $userId ID User penerima (untuk log)
+     * @param string $toEmail Alamat email penerima
+     * @param string $subject Subjek email
+     * @param string $body Konten email (HTML)
+     * @return bool True jika sukses, False jika gagal
      */
     public function sendEmail($userId, $toEmail, $subject, $body)
     {
-        // 1. Log Attempt (Pending)
+        // 1. Catat Log (Status: Pending)
+        // Kita simpan dulu di DB sebelum kirim, supaya kalau error kita punya jejaknya
         $stmt = $this->pdo->prepare("INSERT INTO notifications (user_id, message, channel, status) VALUES (?, ?, 'email', 'pending')");
         // Save a snippet of body or subject as message log
         $logMessage = "Subject: $subject | To: $toEmail"; 

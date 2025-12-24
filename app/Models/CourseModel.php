@@ -8,7 +8,10 @@ class CourseModel
         $this->pdo = $pdo;
     }
 
-    // Semua matkul + dosennya
+    /**
+     * Ambil semua data mata kuliah beserta dosen pengajarnya (jika ada)
+     * Menggunakan GROUP_CONCAT untuk menggabungkan nama dosen jika pengajar > 1
+     */
     public function getAll()
     {
         $stmt = $this->pdo->query("
@@ -26,7 +29,9 @@ class CourseModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 📌 Tambahan WAJIB: Dosen -> Mata Kuliah yang dia ampu
+    /**
+     * Ambil daftar mata kuliah spesifik yang diampu oleh seorang Dosen
+     */
     public function getByDosen($dosen_id)
     {
         $stmt = $this->pdo->prepare("

@@ -18,20 +18,27 @@ $pdo = $db->connect();
 $dosen_id = $_SESSION['user']['id'];
 
 // Get students enrolled in courses taught by this dosen
-$sql = "
-    SELECT DISTINCT u.nama, m.nim, u.email, a.tahun as angkatan
-    FROM users u
-    JOIN enrollments e ON u.id = e.student_id
-    JOIN courses co ON e.course_id = co.id
-    JOIN dosen_courses dc ON dc.matkul_id = co.id
-    LEFT JOIN mahasiswa m ON u.id = m.user_id
-    LEFT JOIN angkatan a ON m.angkatan_id = a.id_angkatan
-    WHERE dc.dosen_id = :dosen_id AND u.role = 'mahasiswa'
-    ORDER BY u.nama ASC
-";
-$stmt = $pdo->prepare($sql);
-$stmt->execute(['dosen_id' => $dosen_id]);
-$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$students = [];
+try {
+    $sql = "
+        SELECT DISTINCT u.nama, m.nim, u.email, a.tahun as angkatan
+        FROM users u
+        JOIN enrollments e ON u.id = e.student_id
+        JOIN courses co ON e.course_id = co.id
+        JOIN dosen_courses dc ON dc.matkul_id = co.id
+        LEFT JOIN mahasiswa m ON u.id = m.user_id
+        LEFT JOIN angkatan a ON m.angkatan_id = a.id_angkatan
+        WHERE dc.dosen_id = :dosen_id AND u.role = 'mahasiswa'
+        ORDER BY u.nama ASC
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['dosen_id' => $dosen_id]);
+    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Log error but don't crash - show empty state instead
+    error_log("Error fetching students: " . $e->getMessage());
+    $students = [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -74,6 +81,11 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
                      <p class="text-blue-200">Daftar mahasiswa yang terdaftar di kelas-kelas Anda.</p>
                 </div>
                 <div class="flex items-center gap-4">
+                    <!-- Tambah Mahasiswa Button -->
+                    <a href="tambah_mahasiswa.php" class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-3 rounded-2xl text-sm font-bold text-white shadow-lg shadow-green-500/20 hover:scale-105 transition flex items-center gap-2 border border-white/10">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Tambah Mahasiswa
+                    </a>
                     <!-- Online Badge -->
                     <div class="glass px-4 py-2 rounded-full flex items-center gap-2 text-sm text-blue-900 font-bold bg-white/80 backdrop-blur-sm hidden md:flex">
                         <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online

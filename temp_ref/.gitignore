@@ -1,5 +1,0 @@
-.env
-/setup_database/database_backup.sql
-/app/google
-vendor.zip
-/vendor/

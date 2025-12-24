@@ -61,13 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="space-y-2">
                 <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Kode Departemen / Prodi</label>
                 <input type="text" name="kode_prodi" required placeholder="Contoh: IF, SI, TI" 
-                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white placeholder-blue-300/30 border-white/10 transition-all uppercase">
+                       class="w-full px-5 py-3.5 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black placeholder-slate-400 border border-white/10 transition-all uppercase bg-white/90 backdrop-blur-sm">
             </div>
 
             <div class="space-y-2">
                 <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Nama Lengkap Program Studi</label>
                 <input type="text" name="nama_prodi" required placeholder="Contoh: Informatika" 
-                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white placeholder-blue-300/30 border-white/10 transition-all">
+                       class="w-full px-5 py-3.5 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black placeholder-slate-400 border border-white/10 transition-all bg-white/90 backdrop-blur-sm">
             </div>
 
             <div class="flex gap-4 pt-6">

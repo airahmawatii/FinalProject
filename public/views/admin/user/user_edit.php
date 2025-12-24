@@ -96,14 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Nama Lengkap</label>
                 <input type="text" name="nama" required placeholder="Nama User" 
                        value="<?= htmlspecialchars($currentUser['nama']) ?>" 
-                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 transition-all">
+                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black border-white/10 transition-all">
             </div>
 
             <div class="space-y-2">
                 <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Alamat Email</label>
                 <input type="email" name="email" required placeholder="Email" 
                        value="<?= htmlspecialchars($currentUser['email']) ?>" 
-                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 transition-all">
+                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black border-white/10 transition-all">
             </div>
 
             <div class="grid grid-cols-2 gap-6">
@@ -142,14 +142,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  <div class="space-y-2">
                     <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Nomor Induk Mahasiswa (NIM)</label>
                     <input type="text" name="nim" value="<?= htmlspecialchars($currentUser['nim'] ?? '') ?>"
-                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10">
+                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black border-white/10">
                 </div>
                 
                  <div class="space-y-2">
                     <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Program Studi</label>
                     <div class="relative">
                         <select name="prodi_id" 
-                                class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white bg-slate-800/80 border-white/10 appearance-none cursor-pointer">
+                                class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black bg-slate-800/80 border-white/10 appearance-none cursor-pointer">
                             <option value="">-- Pilih Prodi --</option>
                             <?php foreach ($prodiList as $p): ?>
                                 <option value="<?= $p['id_prodi'] ?>" <?= ($currentUser['prodi_id'] ?? '') == $p['id_prodi'] ? 'selected' : '' ?>>
@@ -168,12 +168,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  <div class="space-y-2">
                     <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">NIDN</label>
                     <input type="text" name="nidn" value="<?= htmlspecialchars($currentUser['nidn'] ?? '') ?>"
-                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10">
+                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black border-white/10">
                 </div>
                  <div class="space-y-2">
                     <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">NIP (Optional)</label>
                     <input type="text" name="nip" value="<?= htmlspecialchars($currentUser['nip'] ?? '') ?>"
-                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10">
+                           class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-black border-white/10">
                 </div>
             </div>
 

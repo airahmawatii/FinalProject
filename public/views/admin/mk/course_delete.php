@@ -8,8 +8,17 @@ require_once "../../../../app/Models/CourseModel.php";
 $db = new Database();
 $pdo = $db->connect();
 
-$model = new CourseModel($pdo);
-$model->delete($_GET['id']);
+$id = $_GET['id'] ?? null;
+if (!$id) die("ID tidak ditemukan");
+
+// hapus relasi dosen-mk (multi dosen)
+$stmt = $pdo->prepare("DELETE FROM dosen_courses WHERE matkul_id = ?");
+$stmt->execute([$id]);
+
+// hapus mata kuliah
+$model->delete($id);
 
 header("Location: index.php?msg=deleted");
 exit;
+
+

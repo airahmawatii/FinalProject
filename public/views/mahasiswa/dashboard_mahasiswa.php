@@ -17,12 +17,16 @@ $pdo = $db->connect();
 $taskModel = new TaskModel($pdo);
 $tasks = $taskModel->getByStudent($_SESSION['user']['id']);
 
-// Get enrolled courses for semester info
+// Ambil data semester dari mata kuliah yang diambil mahasiswa
 $stmt = $pdo->prepare("SELECT DISTINCT c.semester FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE e.student_id = ?");
 $stmt->execute([$_SESSION['user']['id']]);
 $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-// Analytics Calculation
+// --- HITUNGAN ANALITIK SEDERHANA ---
+// Menghitung:
+// 1. Tugas Selesai (Completed Count)
+// 2. Deadline Terdekat (Next Deadline) - Untuk ditampilkan di "Featured Card"
+// 3. Status Urgent (H-3 Deadline)
 $now = time();
 $nextDeadline = null;
 $urgentCount = 0;
@@ -34,19 +38,59 @@ foreach ($tasks as $t) {
     } else {
         $deadlineTime = strtotime($t['deadline']);
         if ($deadlineTime > $now) {
+            // Logic cari deadline paling dekat yang belum lewat
             if ($nextDeadline === null || $deadlineTime < strtotime($nextDeadline['deadline'])) {
                 $nextDeadline = $t;
             }
+            // Logic Urgent: Deadline kurang dari 3 hari (3 * 24 jam)
             if ($deadlineTime - $now < 3 * 86400) $urgentCount++;
         }
     }
 }
+
+// Siapkan Data Gantt Chart (Timeline Tugas)
+$ganttData = [];
+foreach ($tasks as $task) {
+    // Asumsi tanggal mulai: Tanggal dibuat atau H-7 sebelum deadline
+    $startDate = isset($task['created_at']) ? strtotime($task['created_at']) : strtotime('-7 days', strtotime($task['deadline']));
+    $endDate = strtotime($task['deadline']);
+    
+    // Hanya tampilkan tugas yang valid dan belum terlalu lama berlalu
+    if ($endDate >= strtotime('today')) {
+        $ganttData[] = [
+            'x' => htmlspecialchars($task['task_title']),
+            'y' => [
+                $startDate * 1000, 
+                $endDate * 1000
+            ],
+            // Warna: Merah jika deadline < 2 hari, sisanya Indigo
+            'fillColor' => strtotime($task['deadline']) < strtotime('+2 days') ? '#ef4444' : '#6366f1',
+            'course' => htmlspecialchars($task['course_name'] ?? 'Umum')
+        ];
+    }
+}
+// Urutkan berdasarkan deadline terdekat
+usort($ganttData, function($a, $b) {
+    return $a['y'][1] - $b['y'][1];
+});
+$ganttData = array_slice($ganttData, 0, 10); // Batasi 10 tugas saja
 
 $totalTasks = count($tasks);
 $completionRate = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) : 0;
 
 $user = $_SESSION['user'];
 $photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['photo'] : "https://ui-avatars.com/api/?name=" . urlencode($user['nama']) . "&background=2563eb&color=fff&bold=true";
+
+// Cek Koneksi Google Calendar (OAuth atau Service Account)
+require_once __DIR__ . '/../../../app/Services/GoogleClientService.php';
+$clientService = new GoogleClientService();
+if ($clientService->isServiceAccount()) {
+    $gcal_connected = true; 
+} else {
+    $stmt = $pdo->prepare("SELECT gcal_access_token FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user']['id']]);
+    $gcal_connected = !empty($stmt->fetchColumn());
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -131,8 +175,8 @@ $photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['ph
             <!-- Header -->
             <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                 <div>
-                     <h1 class="text-3xl md:text-3xl font-bold mb-2 text-white">Halo, <?= htmlspecialchars(explode(' ', $_SESSION['user']['nama'] ?? $_SESSION['user']['email'])[0]) ?>! ✨</h1>
-                     <p class="text-blue-200">Tetap semangat, pantau tugasmu hari ini.</p>
+                     <h1 class="text-3xl md:text-3xl font-bold mb-2 text-white">Halo, <?= htmlspecialchars(explode(' ', $_SESSION['user']['nama'] ?? $_SESSION['user']['email'])[0]) ?></h1>
+                     <p class="text-blue-200">Pantau tugas dan jadwal akademik Anda hari ini.</p>
                 </div>
                 <div class="flex items-center gap-4">
                     <!-- Online Badge -->
@@ -199,8 +243,8 @@ $photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['ph
                                     </div>
                                 </div>
                             <?php else: ?>
-                                <h2 class="text-3xl font-bold">Semua Aman! 🎉</h2>
-                                <p class="text-blue-100 mt-2">Tidak ada deadline dalam waktu dekat. Istirahatlah.</p>
+                                <h2 class="text-3xl font-bold">Tidak ada deadline mendesak</h2>
+                                <p class="text-blue-100 mt-2">Saat ini tidak ada tugas dengan tenggat waktu kurang dari 3 hari.</p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -234,20 +278,29 @@ $photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['ph
             </div>
 
             <div class="flex flex-col gap-8 mb-10">
-                <!-- Kalender Akademik on Top -->
+                <!-- Kalender Akademik (Now Acting as Gantt Too) -->
                 <div class="glass rounded-3xl p-8 shadow-xl">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                        <span>📅</span> Kalender Akademik
-                    </h3>
+                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            Kalender Tugas & Akademik
+                        </h3>
+                        <div class="flex gap-2">
+                            <?php if (!$gcal_connected): ?>
+                                <a href="<?= BASE_URL ?>/auth/google_calendar_auth.php?action=connect" 
+                                   class="bg-white text-blue-900 border border-blue-200 hover:bg-blue-50 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition shadow-md">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
+                                    Connect G-Calendar
+                                </a>
+                            <?php else: ?>
+                                <button onclick="syncCalendar()" id="btn-sync-gcal"
+                                   class="bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-500/50 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition shadow-md">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Sync Calendar
+                                </button>
+                            <?php endif; ?>
+                         </div>
+                    </div>
                     <div id='calendar'></div>
-                </div>
-
-                <!-- Timeline Pengerjaan (Gantt Chart) Below -->
-                <div class="glass rounded-3xl p-8 shadow-xl">
-                     <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
-                        <span>⏳</span> Timeline Pengerjaan (Gantt Chart)
-                     </h3>
-                    <div id="gantt-chart"></div>
                 </div>
             </div>
 
@@ -255,6 +308,43 @@ $photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['ph
     </main>
 
     <script>
+        function syncCalendar() {
+            const btn = document.getElementById('btn-sync-gcal');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="animate-spin">⌛</span> Syncing...';
+            btn.disabled = true;
+
+            fetch('<?= BASE_URL ?>/api/sync_gcal_mahasiswa.php')
+                .then(r => r.json())
+                .then(data => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    if(data.success) {
+                        Swal.fire('Sukses!', data.message, 'success');
+                    } else {
+                        if(data.code === 'AUTH_REQUIRED') {
+                            Swal.fire({
+                                title: 'Akses Ditolak',
+                                text: 'Izin Google Calendar kadaluarsa.',
+                                icon: 'warning',
+                                confirmButtonText: 'Connect Ulang',
+                                showCancelButton: true
+                            }).then((result) => {
+                                if(result.isConfirmed) {
+                                    window.location.href = '<?= BASE_URL ?>/auth/google_calendar_auth.php?action=connect';
+                                }
+                            });
+                        } else {
+                            Swal.fire('Gagal', data.message, 'error');
+                        }
+                    }
+                })
+                .catch(doc => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+                });
+        }
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuBtn = document.getElementById('mobile-menu-btn');
             const sidebar = document.getElementById('sidebar');
@@ -279,77 +369,70 @@ $photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['ph
                 closeSidebarBtn.addEventListener('click', toggleSidebar);
             }
 
-            fetch('<?= BASE_URL ?>/api/get_tasks.php?all=true')
-                .then(response => response.json())
-                .then(tasks => {
-                    var calendarEl = document.getElementById('calendar');
-                    if (calendarEl) {
-                        var calendar = new FullCalendar.Calendar(calendarEl, {
-                            initialView: 'dayGridMonth',
-                            headerToolbar: { left: 'title', right: 'prev,next' },
-                            titleFormat: { year: '2-digit', month: 'short' },
-                            height: 'auto',
-                            events: tasks.map(t => ({
-                                title: t.title,
-                                start: t.end,
-                                backgroundColor: '#2563EB',
-                                borderColor: '#2563EB',
-                                extendedProps: { course: t.course }
-                            })),
-                             eventClick: function(info) {
-                                Swal.fire({
-                                    title: info.event.title,
-                                    text: 'Mata Kuliah: ' + (info.event.extendedProps.course || 'Umum'),
-                                    icon: 'info'
-                                });
-                            }
-                        });
-                        calendar.render();
-                    }
+            // --- Inisialisasi Kalender (Logika Timeline/Gantt Digabung) ---
+            try {
+                // Siapkan data event dari PHP langsung agar logika Warna & Durasi lebih mudah diatur
+                const calendarEvents = <?= json_encode(array_map(function($t) {
+                    // Logic Start Date: created_at atau H-7 deadline
+                    $start = !empty($t['created_at']) ? $t['created_at'] : date('Y-m-d H:i:s', strtotime('-7 days', strtotime($t['deadline'])));
+                    $end = $t['deadline'];
+                    
+                    // Logic Warna: Merah jika deadline dekat (< 2 hari), Biru jika aman
+                    $isUrgent = (strtotime($t['deadline']) - time()) < (2 * 86400); 
+                    // Jika sudah selesai (completed), mungkin bisa kasih warna Hijau? Tapi user minta Merah/Biru aja.
+                    
+                    return [
+                        'title' => $t['course_name'] ?? 'Tugas Umum', // HANYA NAMA MATKUL
+                        'start' => $start,
+                        'end' => $end,
+                        'backgroundColor' => $isUrgent ? '#ef4444' : '#3b82f6', // Red-500 or Blue-500
+                        'borderColor' => $isUrgent ? '#ef4444' : '#3b82f6',
+                        'extendedProps' => [
+                            'task_title' => $t['task_title'], // Simpan judul asli untuk tooltip/popup
+                            'deadline' => $t['deadline']
+                        ]
+                    ];
+                }, $tasks)) ?>;
 
-                    // Gantt Chart
-                    const ganttEl = document.querySelector("#gantt-chart");
-                    if (ganttEl) {
-                        if (!tasks || tasks.length === 0) {
-                            ganttEl.innerHTML = '<div class="text-center py-10 text-slate-400 font-medium italic">Belum ada data linimasa tugas. ✨</div>';
-                        } else {
-                            var options = {
-                                series: [{
-                                    name: 'Rentang Waktu',
-                                    data: tasks.filter(t => t.gantt && t.gantt.y).map(t => ({
-                                        x: t.title || 'Tanpa Judul', 
-                                        y: t.gantt.y,
-                                        fillColor: t.gantt.fillColor || '#3B82F6'
-                                    }))
-                                }],
-                                chart: {
-                                    height: Math.max(350, tasks.length * 50 + 100),
-                                    type: 'rangeBar',
-                                    toolbar: { show: false },
-                                    background: 'transparent',
-                                    foreColor: '#1e293b'
-                                },
-                                plotOptions: {
-                                    bar: {
-                                        horizontal: true,
-                                        barHeight: '60%',
-                                        borderRadius: 8,
-                                        rangeBarGroupRows: true
-                                    }
-                                },
-                                colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
-                                xaxis: { type: 'datetime' },
-                                grid: { 
-                                    show: true,
-                                    borderColor: '#e2e8f0',
-                                    xaxis: { lines: { show: true } }
-                                }
-                            };
-                            var chart = new ApexCharts(document.querySelector("#gantt-chart"), options);
-                            chart.render();
-                        }
+                var calendarEl = document.getElementById('calendar');
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    headerToolbar: { left: 'title', right: 'prev,next today' },
+                    titleFormat: { year: 'numeric', month: 'long' },
+                    height: 'auto',
+                    events: calendarEvents,
+                    eventDisplay: 'block', // Kotak memanjang (Gantt Style)
+                    dayMaxEvents: false, // Tumpuk semua, jangan disingkat
+                    eventTimeFormat: { // Sembunyikan jam di kotak event agar muat nama matkul
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        meridiem: 'short',
+                        omitZeroMinute: true,
+                        meridiem: false
+                    },
+                    displayEventTime: false, // Opsi alternatif: sembunyikan jam total agar bersih
+                    eventClick: function(info) {
+                         Swal.fire({
+                            title: info.event.extendedProps.task_title, // Judul Tugas di Popup
+                            html: `
+                                <div class="text-left">
+                                    <p class="mb-1"><strong>Matkul:</strong> ${info.event.title}</p>
+                                    <p class="mb-1"><strong>Deadline:</strong> ${moment(info.event.extendedProps.deadline).format('DD MMM YYYY, HH:mm')}</p>
+                                    <div class="mt-4 flex justify-end">
+                                        <a href="daftar_tugas.php" class="text-blue-500 hover:underline">Lihat Detail</a>
+                                    </div>
+                                </div>
+                            `,
+                            icon: 'info',
+                            confirmButtonColor: '#3b82f6'
+                        });
                     }
                 });
+                calendar.render();
+            } catch (e) {
+                console.error("Calendar Error:", e);
+                document.getElementById('calendar').innerHTML = '<p class="text-red-400">Gagal memuat kalender.</p>';
+            }
 
             <?php if (isset($_SESSION['flash_message'])): ?>
                 Swal.fire({

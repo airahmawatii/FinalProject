@@ -240,6 +240,10 @@ $photoUrl = !empty($user['photo']) ? BASE_URL . "/uploads/profiles/" . $user['ph
             closeSidebarBtn.addEventListener('click', toggleSidebar);
         }
 
+        /**
+         * Fungsi AJAX untuk menandai tugas selesai/belum selesai
+         * Memanggil endpoint API: /api/toggle_task.php
+         */
         function toggleTask(taskId) {
             fetch('<?= BASE_URL ?>/api/toggle_task.php', {
                 method: 'POST',

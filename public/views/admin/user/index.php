@@ -1,10 +1,14 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once "../../../../app/config/config.php";
 require_once "../../../../app/config/database.php";
 
 // Cek role admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    die("Akses ditolak.");
+    header("Location: " . BASE_URL . "/index.php?page=login");
+    exit;
 }
 
 $db = new Database();
@@ -12,26 +16,37 @@ $pdo = $db->connect();
 
 // Hapus user (We should ideally use Model, but keep it simple for now as per existing style)
 if (isset($_GET['delete_id'])) {
-    $stmt = $pdo->prepare("DELETE FROM users WHERE id=?");
-    $stmt->execute([$_GET['delete_id']]);
-    header("Location: index.php?msg=deleted");
-    exit;
+    try {
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id=?");
+        $stmt->execute([$_GET['delete_id']]);
+        header("Location: index.php?msg=deleted");
+        exit;
+    } catch (PDOException $e) {
+        error_log("Error deleting user: " . $e->getMessage());
+        header("Location: index.php?msg=error");
+        exit;
+    }
 }
 
 // Ambil semua user dengan JOIN info detail
-// REPLACES: $users = $pdo->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
-$sql = "
-    SELECT u.*, 
-           m.nim, 
-           d.nidn, d.nip,
-           a.tahun as angkatan
-    FROM users u
-    LEFT JOIN mahasiswa m ON u.id = m.user_id
-    LEFT JOIN dosen d ON u.id = d.user_id
-    LEFT JOIN angkatan a ON m.angkatan_id = a.id_angkatan
-    ORDER BY u.created_at DESC
-";
-$users = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+$users = [];
+try {
+    $sql = "
+        SELECT u.*, 
+               m.nim, 
+               d.nidn, d.nip,
+               a.tahun as angkatan
+        FROM users u
+        LEFT JOIN mahasiswa m ON u.id = m.user_id
+        LEFT JOIN dosen d ON u.id = d.user_id
+        LEFT JOIN angkatan a ON m.angkatan_id = a.id_angkatan
+        ORDER BY u.created_at DESC
+    ";
+    $users = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching users: " . $e->getMessage());
+    $users = [];
+}
 
 // Success message
 $msg = "";

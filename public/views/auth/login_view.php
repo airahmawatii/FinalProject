@@ -84,7 +84,7 @@ require_once __DIR__ . '/../../../app/config/db_init.php';
                             <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="TaskAcademia" class="h-14 w-auto">
                         </div>
                     </div>
-                    <h2 class="text-2xl font-bold mb-2 text-white">Selamat Datang! 👋</h2>
+                    <h2 class="text-2xl font-bold mb-2 text-white">Selamat Datang</h2>
                     <p class="text-slate-300 text-sm font-medium">Masuk untuk mengelola tugas akademikmu.</p>
                 </div>
 

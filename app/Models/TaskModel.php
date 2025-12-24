@@ -8,6 +8,9 @@ class TaskModel
         $this->db = $pdo;
     }
 
+    /**
+     * Ambil semua tugas yang dibuat oleh Dosen tertentu
+     */
     public function getByDosen($dosen_id)
     {
         $stmt = $this->db->prepare("SELECT tasks.*, courses.name AS course_name 
@@ -17,9 +20,13 @@ class TaskModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Ambil tugas-tugas mahasiswa berdasarkan mata kuliah yang diambil
+     * Termasuk status apakah sudah dikerjakan/belum (is_completed)
+     */
     public function getByStudent($student_id)
     {
-        // Asumsi tabel enrollments menghubungkan student_id dan course_id
+        // Join tabel enrollments untuk memastikan mahasiswa hanya melihat tugas di kelasnya
         $stmt = $this->db->prepare("
             SELECT t.*, c.name AS course_name, u.nama AS dosen_name,
                    tc.completed_at IS NOT NULL as is_completed
@@ -35,23 +42,26 @@ class TaskModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Tandai tugas selesai atau belum selesai (Toggle)
+     */
     public function toggleCompletion($task_id, $user_id)
     {
-        // Check if already completed
+        // Cek apakah sudah selesai sebelumnya
         $stmt = $this->db->prepare("SELECT id FROM task_completions WHERE task_id = ? AND user_id = ?");
         $stmt->execute([$task_id, $user_id]);
         $exists = $stmt->fetch();
 
         if ($exists) {
-            // Unmark
+            // Jika sudah => Hapus (Unmark)
             $stmt = $this->db->prepare("DELETE FROM task_completions WHERE task_id = ? AND user_id = ?");
             $stmt->execute([$task_id, $user_id]);
-            return false; // Not completed
+            return false; // Kembali ke status Belum Selesai
         } else {
-            // Mark
+            // Jika belum => Tambah (Mark as Done)
             $stmt = $this->db->prepare("INSERT INTO task_completions (task_id, user_id) VALUES (?, ?)");
             $stmt->execute([$task_id, $user_id]);
-            return true; // Completed
+            return true; // Status jadi Selesai
         }
     }
 

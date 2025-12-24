@@ -11,7 +11,7 @@ if (!isset($_SESSION['user'])) {
 
 require_once __DIR__ . '/../app/Services/GoogleClientService.php';
 
-$google = new GoogleClientService();
+$google = new GoogleClientService(true);
 $client = $google->getClient();
 
 // Redirect to Google's OAuth 2.0 Server

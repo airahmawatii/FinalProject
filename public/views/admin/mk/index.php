@@ -139,12 +139,12 @@ if (isset($_GET['msg'])) {
                                     <td class="p-6 font-mono text-[10px] text-blue-400 font-bold tracking-tighter shadow-sm">
                                         <span class="bg-blue-500/10 px-2 py-1 rounded-lg border border-blue-500/20">#<?= $c['id'] ?></span>
                                     </td>
-                                    <td class="p-6">
+                                    <td class="p-6" style="width: 400px; min-width: 400px; max-width: 400px;">
                                         <div class="flex items-center gap-4">
-                                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-blue-600/20 flex items-center justify-center text-blue-300 text-xl border border-white/10 group-hover:scale-110 transition">
+                                            <div class="w-12 h-12 flex-shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-blue-600/20 flex items-center justify-center text-blue-300 text-xl border border-white/10 group-hover:scale-110 transition">
                                                 📚
                                             </div>
-                                            <div class="font-bold text-white text-base"><?= htmlspecialchars($c['name']) ?></div>
+                                            <div class="font-bold text-white text-base truncate"><?= htmlspecialchars($c['name']) ?></div>
                                         </div>
                                     </td>
                                     <td class="p-6">

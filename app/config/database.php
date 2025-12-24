@@ -9,10 +9,13 @@ class Database {
     private $password;
     public $conn;
 
+    // Konstruktor: Membaca konfigurasi database dari file .env
     public function __construct() {
+        // Load library Dotenv untuk membaca file .env
         $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
         $dotenv->safeLoad();
 
+        // Ambil credential database, atau gunakan default jika kosong
         $this->host = $_ENV['DB_HOST'] ?? '';
         $this->port = $_ENV['DB_PORT'] ?? '3306';
         $this->db_name = $_ENV['DB_DATABASE'] ?? '';
