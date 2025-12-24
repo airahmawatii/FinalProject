@@ -1,6 +1,16 @@
-.env
+# Folder vendor dan node
 /vendor/
-**/vendor/
-node_modules/
+/node_modules/
+
+# File konfigurasi sensitif
+.env
+
+# Backup database
+/setup_database/database_backup.sql
+
+# Google API Secrets (PENTING)
+/app/google/service-account.json
+/app/google/credentials.json
+
+# Lainnya
 *.zip
-setup_database/database_backup.sql
