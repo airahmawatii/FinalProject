@@ -22,6 +22,14 @@ class AuthController
 
             if ($user && password_verify($pw, $user['password'])) {
 
+                // Cek Status Pending
+                if ($user['status'] === 'pending') {
+                     // Kita set session agar bisa menampilkan nama di halaman pending (opsional)
+                     $_SESSION['user'] = $user;
+                     header("Location: " . BASE_URL . "/views/auth/pending.php");
+                     exit;
+                }
+
                 $_SESSION['user'] = $user;
                 $_SESSION['flash_message'] = "Selamat datang kembali, " . $user['nama'] . "!";
 

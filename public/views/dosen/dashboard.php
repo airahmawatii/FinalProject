@@ -9,6 +9,12 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'dosen') {
     exit;
 }
 
+// Security: Prevent Pending Users from bypassing
+if ($_SESSION['user']['status'] === 'pending') {
+    header("Location: " . BASE_URL . "/views/auth/pending.php");
+    exit;
+}
+
 require_once __DIR__ . '/../../../app/config/database.php';
 require_once __DIR__ . '/../../../app/Models/TaskModel.php';
 require_once __DIR__ . '/../../../app/Models/CourseModel.php';
