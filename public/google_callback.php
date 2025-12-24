@@ -2,10 +2,23 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/../app/config/config.php';
-require_once __DIR__ . '/../app/config/database.php';
-require_once __DIR__ . '/../app/Services/GoogleClientService.php';
-require_once __DIR__ . '/../app/Controllers/AuthController.php';
+// Smart Path Detection (Localhost vs Hosting)
+$baseDir = __DIR__;
+if (file_exists($baseDir . '/../app/config/config.php')) {
+    // Localhost Structure (/public/google_callback.php)
+    require_once $baseDir . '/../app/config/config.php';
+    require_once $baseDir . '/../app/config/database.php';
+    require_once $baseDir . '/../app/Services/GoogleClientService.php';
+    require_once $baseDir . '/../app/Controllers/AuthController.php';
+} elseif (file_exists($baseDir . '/app/config/config.php')) {
+    // Hosting Structure (Root / google_callback.php)
+    require_once $baseDir . '/app/config/config.php';
+    require_once $baseDir . '/app/config/database.php';
+    require_once $baseDir . '/app/Services/GoogleClientService.php';
+    require_once $baseDir . '/app/Controllers/AuthController.php';
+} else {
+    die("Error: Configuration files not found. Check directory structure.");
+}
 
 // Hybrid Callback Handler
 // 1. If NOT logged in -> It's a Login/Register attempt -> Delegate to AuthController

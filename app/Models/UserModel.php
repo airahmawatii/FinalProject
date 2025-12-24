@@ -15,12 +15,54 @@ class UserModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($nama, $email, $password, $role) {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO users (nama, email, password, role)
-            VALUES (?, ?, ?, ?)
-        ");
-        return $stmt->execute([$nama, $email, $password, $role]);
+    public function create($nama, $email, $password, $role, $data = []) {
+        try {
+            $this->pdo->beginTransaction();
+
+            $stmt = $this->pdo->prepare("
+                INSERT INTO users (nama, email, password, role, status)
+                VALUES (?, ?, ?, ?, 'pending')
+            ");
+            $stmt->execute([$nama, $email, $password, $role]);
+            $userId = $this->pdo->lastInsertId();
+
+            if ($role === 'mahasiswa') {
+                $nim = $data['nim'] ?? null;
+                $prodi_id = $data['prodi_id'] ?? null;
+                $angkatan_id = $data['angkatan_id'] ?? null;
+
+                // Otomatis deteksi angkatan dari NIM jika tidak disediakan
+                if (!$angkatan_id && !empty($nim) && strlen($nim) >= 2) {
+                    $tahun = "20" . substr($nim, 0, 2);
+                    $stmtA = $this->pdo->prepare("SELECT id_angkatan FROM angkatan WHERE tahun = ?");
+                    $stmtA->execute([$tahun]);
+                    $a = $stmtA->fetch();
+                    if ($a) $angkatan_id = $a['id_angkatan'];
+                }
+
+                $stmt = $this->pdo->prepare("
+                    INSERT INTO mahasiswa (user_id, nim, prodi_id, angkatan_id)
+                    VALUES (?, ?, ?, ?)
+                ");
+                $stmt->execute([$userId, $nim, $prodi_id, $angkatan_id]);
+            } elseif ($role === 'dosen') {
+                $nidn = $data['nidn'] ?? null;
+                $nip = $data['nip'] ?? null;
+                $stmt = $this->pdo->prepare("
+                    INSERT INTO dosen (user_id, nidn, nip)
+                    VALUES (?, ?, ?)
+                ");
+                $stmt->execute([$userId, $nidn, $nip]);
+            }
+
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public function getAll() {
@@ -46,11 +88,67 @@ class UserModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function update($id, $nama, $email, $role) {
-        $stmt = $this->pdo->prepare("
-            UPDATE users SET nama=?, email=?, role=? WHERE id=?
-        ");
-        return $stmt->execute([$nama, $email, $role, $id]);
+    public function update($id, $nama, $email, $role, $data = []) {
+        try {
+            $this->pdo->beginTransaction();
+
+            $status = $data['status'] ?? 'active';
+
+            // 1. Update dasar di tabel users
+            $stmt = $this->pdo->prepare("
+                UPDATE users SET nama=?, email=?, role=?, status=? WHERE id=?
+            ");
+            $stmt->execute([$nama, $email, $role, $status, $id]);
+
+            // 2. Update data spesifik berdasarkan role
+            if ($role === 'mahasiswa') {
+                $nim = $data['nim'] ?? null;
+                $prodi_id = $data['prodi_id'] ?? null;
+                $angkatan_id = $data['angkatan_id'] ?? null;
+
+                // Otomatis deteksi angkatan dari NIM jika tidak disediakan
+                if (!$angkatan_id && !empty($nim) && strlen($nim) >= 2) {
+                    $tahun = "20" . substr($nim, 0, 2);
+                    $stmtA = $this->pdo->prepare("SELECT id_angkatan FROM angkatan WHERE tahun = ?");
+                    $stmtA->execute([$tahun]);
+                    $a = $stmtA->fetch();
+                    if ($a) $angkatan_id = $a['id_angkatan'];
+                }
+
+                // Cek apakah data mahasiswa sudah ada
+                $check = $this->pdo->prepare("SELECT user_id FROM mahasiswa WHERE user_id = ?");
+                $check->execute([$id]);
+                if ($check->fetch()) {
+                    $stmt = $this->pdo->prepare("UPDATE mahasiswa SET nim=?, prodi_id=?, angkatan_id=? WHERE user_id=?");
+                    $stmt->execute([$nim, $prodi_id, $angkatan_id, $id]);
+                } else {
+                    $stmt = $this->pdo->prepare("INSERT INTO mahasiswa (user_id, nim, prodi_id, angkatan_id) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$id, $nim, $prodi_id, $angkatan_id]);
+                }
+            } elseif ($role === 'dosen') {
+                $nidn = $data['nidn'] ?? null;
+                $nip = $data['nip'] ?? null;
+
+                // Cek apakah data dosen sudah ada
+                $check = $this->pdo->prepare("SELECT user_id FROM dosen WHERE user_id = ?");
+                $check->execute([$id]);
+                if ($check->fetch()) {
+                    $stmt = $this->pdo->prepare("UPDATE dosen SET nidn=?, nip=? WHERE user_id=?");
+                    $stmt->execute([$nidn, $nip, $id]);
+                } else {
+                    $stmt = $this->pdo->prepare("INSERT INTO dosen (user_id, nidn, nip) VALUES (?, ?, ?)");
+                    $stmt->execute([$id, $nidn, $nip]);
+                }
+            }
+
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public function delete($id) {
