@@ -33,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'nidn' => $_POST['nidn'] ?? null,
         'nip' => $_POST['nip'] ?? null,
         'angkatan_id' => $_POST['angkatan_id'] ?? null,
-        'prodi_id' => $_POST['prodi_id'] ?? null
+        'prodi_id' => $_POST['prodi_id'] ?? null,
+        'status' => 'active' // Admin yang nambahin langsung Aktif
     ];
 
     if (empty($error)) {

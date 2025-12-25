@@ -34,11 +34,12 @@ class UserModel {
             $this->pdo->beginTransaction();
 
             // 1. Simpan data dasar ke tabel 'users'
+            $status = $data['status'] ?? 'pending';
             $stmt = $this->pdo->prepare("
                 INSERT INTO users (nama, email, password, role, status)
-                VALUES (?, ?, ?, ?, 'pending')
+                VALUES (?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$nama, $email, $password, $role]);
+            $stmt->execute([$nama, $email, $password, $role, $status]);
             $userId = $this->pdo->lastInsertId();
 
             // 2. Simpan data tambahan berdasarkan perannya
