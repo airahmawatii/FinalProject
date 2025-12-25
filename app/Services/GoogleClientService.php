@@ -44,7 +44,15 @@ class GoogleClientService
             // Fallback ke OAuth Client ID (Logic Lama / Untuk Login)
             $this->client->setClientId($_ENV['GOOGLE_CLIENT_ID'] ?? '');
             $this->client->setClientSecret($_ENV['GOOGLE_CLIENT_SECRET'] ?? '');
-            $this->client->setRedirectUri($_ENV['GOOGLE_REDIRECT_URI'] ?? '');
+            
+            // Auto-detect Redirect URI if not specified in .env
+            // Standard: BASE_URL + /google_callback.php
+            $redirectUri = $_ENV['GOOGLE_REDIRECT_URI'] ?? '';
+            if (empty($redirectUri)) {
+                $redirectUri = BASE_URL . '/google_callback.php';
+            }
+            $this->client->setRedirectUri($redirectUri);
+
             $this->client->setScopes([
                 'email', 
                 'profile',
@@ -74,5 +82,49 @@ class GoogleClientService
         return null;
     }
 
+    /**
+     * Otomatis melakukan otorisasi dan refresh token jika diperlukan.
+     * Sangat berguna untuk sinkronisasi otomatis agar tidak perlu login ulang.
+     * 
+     * @param array $userTokens Data token dari database (access_token, refresh_token, token_expires)
+     * @param int $userId ID User (untuk update database jika token direfresh)
+     * @param PDO $pdo Koneksi database (untuk update database jika token direfresh)
+     * @return bool True jika berhasil otorisasi, False jika gagal.
+     */
+    public function authorizeAndGetTokens($userTokens, $userId, $pdo) {
+        if ($this->isServiceAccount) {
+            return true; // Service account tidak butuh refresh manual user
+        }
 
+        if (empty($userTokens['access_token'])) {
+            return false;
+        }
+
+        $this->client->setAccessToken($userTokens['access_token']);
+
+        // Jika token mati, coba refresh pake refresh_token
+        if ($this->client->isAccessTokenExpired()) {
+            if (!empty($userTokens['refresh_token'])) {
+                try {
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($userTokens['refresh_token']);
+                    
+                    if (!isset($newToken['error'])) {
+                        $this->client->setAccessToken($newToken);
+                        
+                        // Update Database agar token baru tersimpan
+                        $expires = time() + ($newToken['expires_in'] ?? 3599);
+                        $stmt = $pdo->prepare("UPDATE users SET gcal_access_token = ?, gcal_token_expires = ? WHERE id = ?");
+                        $stmt->execute([$newToken['access_token'], $expires, $userId]);
+                        
+                        return true;
+                    }
+                } catch (Exception $e) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        return true;
+    }
 }

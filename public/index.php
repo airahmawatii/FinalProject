@@ -2,8 +2,10 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+// Enable Error Reporting for Debugging (On Hosting)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
 require_once __DIR__ . '/../app/config/config.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../app/config/database.php';
@@ -11,6 +13,11 @@ require_once __DIR__ . '/../app/Controllers/AuthController.php';
 
 $db = new Database();
 $conn = $db->connect();
+
+if (!$conn) {
+    die("Error: Tidak dapat terhubung ke database. Pastikan konfigurasi di file .env sudah benar.");
+}
+
 $auth = new AuthController($conn);
 
 if (isset($_GET['action']) && $_GET['action'] === 'google_login') {
@@ -22,15 +29,13 @@ if (isset($_GET['code'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $name = $_POST['name'] ?? '';
+    $action = $_POST['action'] ?? '';
 
-    if ($action === 'register') {
-        echo $auth->register($name, $email, $password);
-    } elseif ($action === 'login') {
-        echo $auth->login($email, $password);
+    if ($action === 'login') {
+        // AuthController::login() handles its own POST data
+        $auth->login();
+    } elseif ($action === 'register') {
+        echo "Fitur registrasi manual saat ini dinonaktifkan. Silakan gunakan Google Login atau hubungi admin.";
     }
 } else {
     // Basic Routing

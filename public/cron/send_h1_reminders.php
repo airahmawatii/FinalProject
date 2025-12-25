@@ -73,16 +73,16 @@ foreach ($tasks as $task) {
     // Set content based on timing
     if ($isToday) {
         $typeLabel = "HARI H";
-        $subjectPrefix = "🔥 DEADLINE HARI INI";
+        $subjectPrefix = "DEADLINE HARI INI";
         $headerGradient = "linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)";
         $timeContext = "HARI INI";
-        $urgencyMsg = "⏰ <strong>PERHATIAN TERAKHIR!</strong> Tugas ini harus segera dikumpulkan.";
+        $urgencyMsg = "<strong>PERHATIAN TERAKHIR!</strong> Tugas ini harus segera dikumpulkan.";
     } else {
         $typeLabel = "H-1";
-        $subjectPrefix = "⏰ Reminder H-1";
+        $subjectPrefix = "Reminder H-1";
         $headerGradient = "linear-gradient(135deg, #dc2626 0%, #f59e0b 100%)";
         $timeContext = "BESOK";
-        $urgencyMsg = "💡 <strong>Tips:</strong> Selesaikan tugas ini lebih awal agar tidak terburu-buru.";
+        $urgencyMsg = "<strong>Tips:</strong> Selesaikan tugas ini lebih awal agar tidak terburu-buru.";
     }
 
     echo "Processing [{$typeLabel}]: [{$task['course_name']}] {$task['task_title']}\n";
@@ -118,7 +118,7 @@ foreach ($tasks as $task) {
     $emailBody = "
     <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
         <div style='background: {$headerGradient}; padding: 40px 30px; text-align: center;'>
-            <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>".($isToday ? "🔥 Batas Waktu Terakhir!" : "⏰ Pengingat: Deadline Besok")."</h1>
+            <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>".($isToday ? "Batas Waktu Terakhir!" : "Pengingat: Deadline Besok!!!!")."</h1>
             <p style='color: rgba(255,255,255,0.9); margin-top: 5px; font-size: 16px; font-weight: bold;'>{$task['course_name']}</p>
         </div>
 

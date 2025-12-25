@@ -64,42 +64,15 @@ try {
         }
         
     } else {
-        /*
-           MODUS OAUTH (USER LOGIN)
-           ------------------------
-           Ini metode klasik dimana User klik tombol "Connect", login Google, dan kasih izin.
-           Target kalender adalah 'primary' (kalender utama user yg sedang login).
-           
-           Kelemahan: Sering kena blok "Unverified App" oleh Google saat development.
-        */
-        
-        // 2b. Ambil Token User dari Database
-        $stmt = $pdo->prepare("SELECT gcal_access_token, gcal_refresh_token, gcal_token_expires FROM users WHERE id = ?");
+        // --- OAUTH MODE (Login Biasa) ---
+        $stmt = $pdo->prepare("SELECT gcal_access_token as access_token, gcal_refresh_token as refresh_token, gcal_token_expires as expires FROM users WHERE id = ?");
         $stmt->execute([$userId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $userTokens = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$user || empty($user['gcal_access_token'])) {
-            die(json_encode(['success' => false, 'message' => 'Not Connected', 'code' => 'AUTH_REQUIRED']));
+        if (!$clientService->authorizeAndGetTokens($userTokens, $userId, $pdo)) {
+            die(json_encode(['success' => false, 'message' => 'Status: Perlu Hubungkan Ulang Kalender', 'code' => 'AUTH_REQUIRED']));
         }
-
-        $client->setAccessToken($user['gcal_access_token']);
-
-        // Cek apakah token kadaluarsa? Jika ya, Refresh otomatis agar user gak perlu login ulang.
-        if ($client->isAccessTokenExpired()) {
-            if (!empty($user['gcal_refresh_token'])) {
-                $newToken = $client->fetchAccessTokenWithRefreshToken($user['gcal_refresh_token']);
-                if (!isset($newToken['error'])) {
-                    $client->setAccessToken($newToken);
-                    $upd = $pdo->prepare("UPDATE users SET gcal_access_token = ?, gcal_token_expires = ? WHERE id = ?");
-                    $exp = time() + ($newToken['expires_in'] ?? 3599);
-                    $upd->execute([$newToken['access_token'], $exp, $userId]);
-                } else {
-                    die(json_encode(['success' => false, 'message' => 'Refresh Token Error. Re-connect required.']));
-                }
-            } else {
-                die(json_encode(['success' => false, 'message' => 'Token Expired. Re-connect required.']));
-            }
-        }
+        
         $service = new Calendar($client);
     }
     

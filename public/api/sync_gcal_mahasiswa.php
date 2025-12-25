@@ -54,31 +54,14 @@ try {
         }
     } else {
         // --- OAUTH MODE (Login Biasa) ---
-        $stmt = $pdo->prepare("SELECT gcal_access_token, gcal_refresh_token, gcal_token_expires FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT gcal_access_token as access_token, gcal_refresh_token as refresh_token, gcal_token_expires as expires FROM users WHERE id = ?");
         $stmt->execute([$userId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $userTokens = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$user || empty($user['gcal_access_token'])) {
-            die(json_encode(['success' => false, 'message' => 'Not Connected', 'code' => 'AUTH_REQUIRED']));
+        if (!$clientService->authorizeAndGetTokens($userTokens, $userId, $pdo)) {
+            die(json_encode(['success' => false, 'message' => 'Status: Perlu Hubungkan Ulang Kalender', 'code' => 'AUTH_REQUIRED']));
         }
-
-        $client->setAccessToken($user['gcal_access_token']);
-
-        if ($client->isAccessTokenExpired()) {
-            if (!empty($user['gcal_refresh_token'])) {
-                $newToken = $client->fetchAccessTokenWithRefreshToken($user['gcal_refresh_token']);
-                if (!isset($newToken['error'])) {
-                    $client->setAccessToken($newToken);
-                    $upd = $pdo->prepare("UPDATE users SET gcal_access_token = ?, gcal_token_expires = ? WHERE id = ?");
-                    $exp = time() + ($newToken['expires_in'] ?? 3599);
-                    $upd->execute([$newToken['access_token'], $exp, $userId]);
-                } else {
-                    die(json_encode(['success' => false, 'message' => 'Gagal refresh token. Mohon connect ulang.', 'code' => 'AUTH_REQUIRED']));
-                }
-            } else {
-                die(json_encode(['success' => false, 'message' => 'Token expired & no refresh token. Re-connect required.', 'code' => 'AUTH_REQUIRED']));
-            }
-        }
+        
         $service = new Calendar($client);
     }
     

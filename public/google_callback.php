@@ -33,50 +33,41 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-// BINDING FLOW (Existing Logic)
+// BINDING FLOW (Untuk Hubungkan Kalender saat sudah Login)
 if (isset($_GET['code'])) {
-    $service = new GoogleClientService(true); // Force OAuth for Account Binding
+    $service = new GoogleClientService(true); // Force OAuth
     $client = $service->getClient();
 
     try {
-        // Exchange authorization code for access token
         $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
         
-        // Check for errors
         if (isset($token['error'])) {
             throw new Exception("Error fetching token: " . $token['error']);
         }
 
         $accessToken = $token['access_token'];
         $refreshToken = $token['refresh_token'] ?? null; 
-        $expiresIn = $token['expires_in'];
-        $created = $token['created'];
-        $expiresAt = $created + $expiresIn;
+        $expiresAt = time() + $token['expires_in'];
 
         $db = new Database();
         $pdo = $db->connect();
+        $userModel = new UserModel($pdo);
         
-        // Update User
-        if ($refreshToken) {
-            $stmt = $pdo->prepare("UPDATE users SET access_token=?, refresh_token=?, token_expires=? WHERE id=?");
-            $stmt->execute([$accessToken, $refreshToken, $expiresAt, $_SESSION['user']['id']]);
-            $_SESSION['user']['refresh_token'] = $refreshToken; 
-        } else {
-            $stmt = $pdo->prepare("UPDATE users SET access_token=?, token_expires=? WHERE id=?");
-            $stmt->execute([$accessToken, $expiresAt, $_SESSION['user']['id']]);
-        }
+        // Simpan ke kolom gcal_
+        $userModel->updateGcalTokens($_SESSION['user']['id'], $accessToken, $refreshToken, $expiresAt);
         
-        $_SESSION['user']['access_token'] = $accessToken;
+        // Update Session agar dashboard tau kalau sudah konek
+        $_SESSION['user']['gcal_connected'] = true;
         
-        // Success: Redirect based on Role
+        // Redirect balik ke dashboard sesuai Role
         $role = $_SESSION['user']['role'];
         $redirectUrl = ($role === 'dosen') ? BASE_URL . '/views/dosen/dashboard.php' : BASE_URL . '/views/mahasiswa/dashboard_mahasiswa.php';
         
-        header("Location: $redirectUrl?msg=google_connected"); 
+        header("Location: $redirectUrl?msg=" . urlencode("Google Calendar Berhasil Terhubung! 📅")); 
         exit;
 
     } catch (Exception $e) {
-        die("Error: " . $e->getMessage());
+        die("Error Binding Kalender: " . $e->getMessage());
     }
 } else {
     header("Location: " . BASE_URL . "/index.php");

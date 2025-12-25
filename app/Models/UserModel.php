@@ -192,6 +192,20 @@ class UserModel {
         }
     }
 
+    /**
+     * Khusus untuk menyimpan token di kolom gcal_
+     * Digunakan saat user klik "Hubungkan Kalender" dari Dashboard
+     */
+    public function updateGcalTokens($id, $accessToken, $refreshToken, $expires) {
+        if ($refreshToken) {
+            $stmt = $this->pdo->prepare("UPDATE users SET gcal_access_token=?, gcal_refresh_token=?, gcal_token_expires=? WHERE id=?");
+            return $stmt->execute([$accessToken, $refreshToken, $expires, $id]);
+        } else {
+            $stmt = $this->pdo->prepare("UPDATE users SET gcal_access_token=?, gcal_token_expires=? WHERE id=?");
+            return $stmt->execute([$accessToken, $expires, $id]);
+        }
+    }
+
     public function updateProfile($id, $nama, $password = null, $photo = null) {
         if ($password && $photo) {
             $stmt = $this->pdo->prepare("UPDATE users SET nama=?, password=?, photo=? WHERE id=?");
