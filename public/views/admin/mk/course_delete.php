@@ -27,12 +27,24 @@ if (!$id) {
 }
 
 try {
-    // 2. Bersihkan dulu relasi pengajar (dosen_courses)
-    // MySQL MariaDB biasanya sangat ketat, relasi harus dihapus dulu sebelum data utama dihapus.
+    // 2. Bersihkan semua data yang terikat dengan Mata Kuliah ini
+    // MySQL mewajibkan data anak dihapus dulu sebelum data induk dihapus.
+
+    // A. Hapus semua Tugas (Tasks) di matkul ini 
+    // (Ini otomatis akan menghapus data di task_completions karena ada ON DELETE CASCADE)
+    $stmt = $pdo->prepare("DELETE FROM tasks WHERE course_id = ?");
+    $stmt->execute([$id]);
+
+    // B. Hapus semua pendaftaran mahasiswa (Enrollments) di matkul ini
+    $stmt = $pdo->prepare("DELETE FROM enrollments WHERE course_id = ?");
+    $stmt->execute([$id]);
+
+    // C. Hapus relasi dosen (Dosen Courses) 
+    // (Sebenarnya sudah otomatis CASCADE di database, tapi kita hapus manual untuk keamanan)
     $stmt = $pdo->prepare("DELETE FROM dosen_courses WHERE matkul_id = ?");
     $stmt->execute([$id]);
 
-    // 3. Eksekusi penghapusan mata kuliah lewat Model
+    // 3. Terakhir, baru hapus data Mata Kuliah utamanya
     $courseModel->delete($id);
 
     // 4. Kembali ke daftar mata kuliah dengan pesan sukses
