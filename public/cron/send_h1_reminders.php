@@ -1,34 +1,31 @@
 <?php
 /**
- * H-1 & Hari H Deadline Reminder Script
- * Sends email notifications to students for tasks due today or tomorrow
+ * Deadline Reminder Script (H-1 & Hari H)
+ * 
+ * Script ini dirancang untuk dijalankan secara otomatis (Cron Job) setiap hari.
+ * Tugas utamanya: Mencari tugas yang kumpul besok atau hari ini, lalu
+ * mengirim email pengingat kepada mahasiswa yang belum mengerjakan.
  */
 
-// Load dependencies
+// 1. Load semua pengaturan dan library yang dibutuhkan
 require_once __DIR__ . '/../../app/config/config.php';
 require_once __DIR__ . '/../../app/config/database.php';
 require_once __DIR__ . '/../../app/Services/NotificationService.php';
 
-// Initialize database
+// 2. Persiapan Database dan Kurir Email
 $db = new Database();
 $pdo = $db->connect();
 $notifier = new NotificationService($pdo);
 
-// 1. Get Today and Tomorrow dates
+// 3. Tentukan tanggal Hari Ini dan Besok
 $today = date('Y-m-d');
 $tomorrow = date('Y-m-d', strtotime('+1 day'));
 
-// -------------------------------------------------------------------------
-// 1. Tentukan Rentang Waktu
-// -------------------------------------------------------------------------
-// Kita cari tugas yang deadline-nya:
-// - HARI INI ($today)
-// - BESOK ($tomorrow)
-echo "[" . date('Y-m-d H:i:s') . "] Starting Deadline Reminder Script (H-1 & Hari H)...\n";
-echo "Checking for deadlines on: $today (Hari H) and $tomorrow (H-1)\n";
+echo "[" . date('Y-m-d H:i:s') . "] Memulai Script Pengingat Deadline (H-1 & Hari H)...\n";
+echo "Mengecek deadline untuk tanggal: $today (Hari H) dan $tomorrow (H-1)\n";
 
 // -------------------------------------------------------------------------
-// 2. Query Database untuk Cari Tugas
+// 4. Cari Tugas Berdasarkan Tanggal Deadline
 // -------------------------------------------------------------------------
 $sql = "
     SELECT 
@@ -55,14 +52,16 @@ $stmt->execute([
 ]);
 $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-echo "Found " . count($tasks) . " task(s) to process.\n\n";
+echo "Ditemukan " . count($tasks) . " tugas yang perlu diproses.\n\n";
 
 if (empty($tasks)) {
-    echo "No reminders to send. Exiting.\n";
+    echo "Tidak ada pengingat yang perlu dikirim hari ini. Keluar.\n";
     exit(0);
 }
 
-// 3. Process each task
+// -------------------------------------------------------------------------
+// 5. Proses Setiap Tugas Satu Per Satu
+// -------------------------------------------------------------------------
 $totalEmailsSent = 0;
 $totalErrors = 0;
 
@@ -70,7 +69,7 @@ foreach ($tasks as $task) {
     $deadlineDateOnly = date('Y-m-d', strtotime($task['deadline']));
     $isToday = ($deadlineDateOnly === $today);
     
-    // Set content based on timing
+    // Sesuaikan tampilan email berdasarkan sisa waktu (Hari H warnanya merah, H-1 warnanya kuning/merah muda)
     if ($isToday) {
         $typeLabel = "HARI H";
         $subjectPrefix = "DEADLINE HARI INI";
@@ -85,9 +84,11 @@ foreach ($tasks as $task) {
         $urgencyMsg = "<strong>Tips:</strong> Selesaikan tugas ini lebih awal agar tidak terburu-buru.";
     }
 
-    echo "Processing [{$typeLabel}]: [{$task['course_name']}] {$task['task_title']}\n";
+    echo "Memproses [{$typeLabel}]: [{$task['course_name']}] {$task['task_title']}\n";
     
-    // Get enrolled students WHO HAVE NOT COMPLETED the task
+    // -------------------------------------------------------------------------
+    // 6. Cari Mahasiswa yang BELUM MENGUMPULKAN Tugas Ini
+    // -------------------------------------------------------------------------
     $enrollSql = "
         SELECT DISTINCT u.id, u.nama, u.email
         FROM users u
@@ -109,8 +110,11 @@ foreach ($tasks as $task) {
     ]);
     $students = $enrollStmt->fetchAll(PDO::FETCH_ASSOC);
     
-    echo "  → Sending to " . count($students) . " student(s)...\n";
+    echo "  → Target pengiriman: " . count($students) . " mahasiswa...\n";
     
+    // -------------------------------------------------------------------------
+    // 7. Siapkan Desain Email (HTML)
+    // -------------------------------------------------------------------------
     $deadlineTgl = date('d F Y', strtotime($task['deadline']));
     $deadlineJam = date('H:i', strtotime($task['deadline']));
     $emailSubject = "{$subjectPrefix}: {$task['course_name']}";
@@ -118,7 +122,7 @@ foreach ($tasks as $task) {
     $emailBody = "
     <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
         <div style='background: {$headerGradient}; padding: 40px 30px; text-align: center;'>
-            <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>".($isToday ? "Batas Waktu Terakhir!" : "Pengingat: Deadline Besok!!!!")."</h1>
+            <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 800;'>".($isToday ? "Batas Waktu Terakhir!" : "Pengingat: Deadline Besok!")."</h1>
             <p style='color: rgba(255,255,255,0.9); margin-top: 5px; font-size: 16px; font-weight: bold;'>{$task['course_name']}</p>
         </div>
 
@@ -158,13 +162,34 @@ foreach ($tasks as $task) {
     </div>
     ";
     
+    // -------------------------------------------------------------------------
+    // 8. Kirim Email ke Setiap Mahasiswa (Dengan Filter Anti-Spam)
+    // -------------------------------------------------------------------------
     foreach ($students as $student) {
+        // --- CEK DUPLIKAT (ANTI-SPAM) ---
+        // Kita tidak ingin mengirim email yang sama berkali-kali jika cron job error/running ulang.
+        $checkSql = "SELECT 1 FROM notifications WHERE user_id = ? AND task_id = ? AND type = ? AND status = 'sent' AND DATE(created_at) = CURDATE()";
+        $checkStmt = $pdo->prepare($checkSql);
+        $checkStmt->execute([$student['id'], $task['id'], $typeLabel]);
+        
+        if ($checkStmt->fetch()) {
+            echo "    - Lewati {$student['nama']}: Sudah pernah dikirim hari ini.\n";
+            continue;
+        }
+
         try {
-            $success = $notifier->sendEmail($student['id'], $student['email'], $emailSubject, $emailBody);
-            if ($success) $totalEmailsSent++; else $totalErrors++;
+            // Panggil NotificationService untuk mengirim email asli
+            $success = $notifier->sendEmail($student['id'], $student['email'], $emailSubject, $emailBody, $task['id'], $typeLabel);
+            if ($success) {
+                $totalEmailsSent++;
+                echo "    + Sukses mengirim ke {$student['nama']}\n";
+            } else {
+                $totalErrors++;
+                echo "    x Gagal mengirim ke {$student['nama']}\n";
+            }
         } catch (Exception $e) { $totalErrors++; }
     }
 }
 
-echo "\nSummary: Sent $totalEmailsSent emails, $totalErrors errors.\n";
+echo "\n--- SELESAI ---\nRingkasan: Berhasil mengirim $totalEmailsSent email, ditemukan $totalErrors error.\n";
 exit(0);

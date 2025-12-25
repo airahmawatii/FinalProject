@@ -1,4 +1,11 @@
 <?php
+/**
+ * NotificationService - Si Kurir Email Pintar
+ * 
+ * Class ini bertugas mengirim email (pengingat, notifikasi, dll) menggunakan library PHPMailer.
+ * Keunggulannya: Setiap email yang dikirim dicatat di database agar kita bisa melacak
+ * mana yang sukses dan mana yang gagal.
+ */
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -7,19 +14,23 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 class NotificationService
 {
-    private $pdo;
-    private $mail;
+    private $pdo;   // Koneksi Database
+    private $mail;  // Objek PHPMailer
 
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
+        // Langsung siapkan mesin pengirim email saat class ini dipanggil
         $this->setupMailer();
     }
 
+    /**
+     * Konfigurasi Mesin Pengirim Email (SMTP)
+     * Mengambil data dari file .env agar rahasia (password email) tetap aman.
+     */
     private function setupMailer()
     {
-        // 1. Pastikan Environment Variables Terload
-        // Jika $_ENV kosong, kita load manual pake Dotenv
+        // Pastikan variabel lingkungan (.env) sudah dimuat
         if (empty($_ENV['SMTP_HOST'])) {
             $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
             $dotenv->safeLoad();
@@ -28,14 +39,14 @@ class NotificationService
         $this->mail = new PHPMailer(true);
         
         try {
-            // Server settings
+            // Pengaturan Server SMTP (misal: Gmail atau SMTP Hosting)
             $this->mail->isSMTP();
             $this->mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com';
             $this->mail->SMTPAuth   = true;
             $this->mail->Username   = $_ENV['SMTP_USER'] ?? '';
             $this->mail->Password   = $_ENV['SMTP_PASS'] ?? '';
             
-            // Auto-detect encryption based on port
+            // Deteksi keamanan otomatis berdasarkan Port (465 atau 587)
             $port = (int)($_ENV['SMTP_PORT'] ?? 587);
             $this->mail->Port = $port;
             
@@ -45,57 +56,59 @@ class NotificationService
                 $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             }
 
+            // Atur Alamat Pengirim & Nama Pengirim
             $fromEmail = $_ENV['SMTP_USER'] ?? 'noreply@taskacademia.com';
             $fromName  = $_ENV['SMTP_FROM_NAME'] ?? 'TaskAcademia Notifier';
             
             $this->mail->setFrom($fromEmail, $fromName);
-            $this->mail->isHTML(true);
+            $this->mail->isHTML(true); // Biar bisa kirim email desain cantik (HTML)
             $this->mail->CharSet = 'UTF-8';
             
-            // Timeout settings for hosting stability
+            // Atur batas waktu tunggu agar server tidak hang
             $this->mail->Timeout = 30;
         } catch (Exception $e) {
-            error_log("Mailer Setup Error: " . $e->getMessage());
+            // Catat ke log server jika settingan email salah
+            error_log("Gagal Menyiapkan Mailer: " . $e->getMessage());
         }
     }
 
     /**
-     * Kirim email dan catat history-nya ke database
+     * Fungsi Utama: Kirim Email & Catat ke Database.
      * 
-     * @param int $userId ID User penerima (untuk log)
-     * @param string $toEmail Alamat email penerima
-     * @param string $subject Subjek email
-     * @param string $body Konten email (HTML)
-     * @return bool True jika sukses, False jika gagal
+     * @param int $userId Target User
+     * @param string $toEmail Alamat email tujuan
+     * @param string $subject Judul email
+     * @param string $body Isi email (HTML)
+     * @param int|null $taskId (Opsional) ID Tugas yang berkaitan
+     * @param string|null $type (Opsional) Tipe notifikasi (H-1 / Hari H)
      */
-    public function sendEmail($userId, $toEmail, $subject, $body)
+    public function sendEmail($userId, $toEmail, $subject, $body, $taskId = null, $type = null)
     {
-        // 1. Catat Log (Status: Pending)
-        // Kita simpan dulu di DB sebelum kirim, supaya kalau error kita punya jejaknya
-        $stmt = $this->pdo->prepare("INSERT INTO notifications (user_id, message, channel, status) VALUES (?, ?, 'email', 'pending')");
-        // Save a snippet of body or subject as message log
+        // 1. CATAT LOG AWAL: Simpan dulu ke database dengan status 'pending'
+        // Langkah ini penting: Jika server mati tiba-tiba, kita tahu email mana yang belum terkirim.
+        $stmt = $this->pdo->prepare("INSERT INTO notifications (user_id, task_id, message, channel, type, status) VALUES (?, ?, ?, 'email', ?, 'pending')");
         $logMessage = "Subject: $subject | To: $toEmail"; 
-        $stmt->execute([$userId, $logMessage]);
+        $stmt->execute([$userId, $taskId, $logMessage, $type]);
         $notificationId = $this->pdo->lastInsertId();
 
         try {
-            // Reset recipients for batch processing
+            // Bersihkan daftar penerima sebelumnya (mencegah salah kirim pada proses batch)
             $this->mail->clearAddresses();
             
-            // 2. Send Email
+            // 2. PROSES PENGIRIMAN
             $this->mail->addAddress($toEmail);
             $this->mail->Subject = $subject;
             $this->mail->Body    = $body;
             $this->mail->send();
 
-            // 3. Update Log (Success)
+            // 3. UPDATE LOG SUKSES: Tandai di DB bahwa email sudah 'sent'
             $update = $this->pdo->prepare("UPDATE notifications SET status='sent', sent_at=NOW() WHERE id=?");
             $update->execute([$notificationId]);
 
             return true;
 
         } catch (Exception $e) {
-            // 4. Update Log (Failed)
+            // 4. UPDATE LOG GAGAL: Catat alasan kenapa gagal (misal: email salah atau server mati)
             $error = $this->mail->ErrorInfo;
             $update = $this->pdo->prepare("UPDATE notifications SET status='failed', error_log=? WHERE id=?");
             $update->execute([$error, $notificationId]);

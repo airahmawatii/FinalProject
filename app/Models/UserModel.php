@@ -1,13 +1,21 @@
 <?php
+/**
+ * UserModel - Jembatan Rahasia ke Database User
+ * 
+ * Class ini berisi semua perintah SQL untuk mengelola data pengguna,
+ * mulai dari pendaftaran, update profil, hingga urusan token Google.
+ */
 class UserModel {
     private $pdo;
 
+    // Menyiapkan koneksi database saat model ini dipanggil
     public function __construct($pdo) {
         $this->pdo = $pdo;
     }
 
     /**
-     * Cari user berdasarkan Email (Untuk Login)
+     * Mencari user berdasarkan alamat email.
+     * Digunakan saat proses Login untuk memverifikasi siapa yang masuk.
      */
     public function findByEmail($email) {
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email=?");
@@ -15,10 +23,17 @@ class UserModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Membuat User Baru.
+     * Fungsi ini cerdas karena menggunakan "Transaction" (semua sukses atau tidak sama sekali)
+     * untuk menyimpan data di tabel 'users' dan tabel detail peran ('mahasiswa' atau 'dosen').
+     */
     public function create($nama, $email, $password, $role, $data = []) {
         try {
+            // Mulai transaksi database
             $this->pdo->beginTransaction();
 
+            // 1. Simpan data dasar ke tabel 'users'
             $stmt = $this->pdo->prepare("
                 INSERT INTO users (nama, email, password, role, status)
                 VALUES (?, ?, ?, ?, 'pending')
@@ -26,12 +41,13 @@ class UserModel {
             $stmt->execute([$nama, $email, $password, $role]);
             $userId = $this->pdo->lastInsertId();
 
+            // 2. Simpan data tambahan berdasarkan perannya
             if ($role === 'mahasiswa') {
                 $nim = $data['nim'] ?? null;
                 $prodi_id = $data['prodi_id'] ?? null;
                 $angkatan_id = $data['angkatan_id'] ?? null;
 
-                // Otomatis deteksi angkatan dari NIM jika tidak disediakan
+                // Rahasia: Otomatis deteksi tahun angkatan dari 2 angka awal NIM
                 if (!$angkatan_id && !empty($nim) && strlen($nim) >= 2) {
                     $tahun = "20" . substr($nim, 0, 2);
                     $stmtA = $this->pdo->prepare("SELECT id_angkatan FROM angkatan WHERE tahun = ?");
@@ -55,9 +71,11 @@ class UserModel {
                 $stmt->execute([$userId, $nidn, $nip]);
             }
 
+            // Jika semua lancar, simpan permanen
             $this->pdo->commit();
             return true;
         } catch (Exception $e) {
+            // Jika ada satu saja yang error, batalkan semua perubahan tadi
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
@@ -65,23 +83,35 @@ class UserModel {
         }
     }
 
+    /**
+     * Mengambil daftar semua user yang ada di sistem.
+     */
     public function getAll() {
         return $this->pdo->query("SELECT * FROM users")->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // This method was missing and caused the fatal error
+    /**
+     * Mengambil daftar user berdasarkan perannya (misal: ambil semua dosen saja).
+     */
     public function getByRole($role) {
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE role=?");
         $stmt->execute([$role]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Mengambil data mata kuliah yang diajar oleh seorang dosen.
+     */
     public function getDosenCourse($dosen_id) {
         $stmt = $this->pdo->prepare("SELECT * FROM dosen_courses WHERE dosen_id = ?");
         $stmt->execute([$dosen_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Mengambil data lengkap user berdasarkan ID-nya.
+     * Menggunakan JOIN agar data mahasiswa/dosen ikut terbawa.
+     */
     public function findById($id) {
         $stmt = $this->pdo->prepare("
             SELECT u.*, 
@@ -96,19 +126,23 @@ class UserModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Memperbarui data user (Edit User).
+     * Fungsi ini juga menggunakan "Transaction" untuk memastikan konsistensi data.
+     */
     public function update($id, $nama, $email, $role, $data = []) {
         try {
             $this->pdo->beginTransaction();
 
             $status = $data['status'] ?? 'active';
 
-            // 1. Update dasar di tabel users
+            // 1. Update data inti di tabel users
             $stmt = $this->pdo->prepare("
                 UPDATE users SET nama=?, email=?, role=?, status=? WHERE id=?
             ");
             $stmt->execute([$nama, $email, $role, $status, $id]);
 
-            // 2. Update data spesifik berdasarkan role
+            // 2. Update data spesifik per role (Mahasiswa/Dosen)
             if ($role === 'mahasiswa') {
                 $nim = $data['nim'] ?? null;
                 $prodi_id = $data['prodi_id'] ?? null;
@@ -159,27 +193,33 @@ class UserModel {
         }
     }
 
+    /**
+     * Menghapus user dari sistem secara permanen.
+     */
     public function delete($id) {
         $stmt = $this->pdo->prepare("DELETE FROM users WHERE id=?");
         return $stmt->execute([$id]);
     }
 
     /**
-     * Aktifkan user yang statusnya masih 'pending'
-     * Biasanya dipanggil oleh Admin setelah verifikasi manual
+     * Mengubah status user dari 'pending' menjadi 'active'.
+     * Biasanya dilakukan oleh Admin saat menyetujui pendaftaran.
      */
     public function activateUser($id, $role) {
         $stmt = $this->pdo->prepare("UPDATE users SET status='active', role=? WHERE id=?");
         return $stmt->execute([$role, $id]);
     }
 
+    /**
+     * Mengambil daftar user yang baru mendaftar (masih butuh verifikasi).
+     */
     public function getPendingUsers() {
         return $this->pdo->query("SELECT * FROM users WHERE status='pending'")->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Simpan/Update Token Google OAuth untuk akses API Google Calendar
-     * Refresh Token hanya disimpan jika ada (biasanya saat pertama kali connect)
+     * MENYIMPAN TOKEN LOGIN GOOGLE.
+     * Digunakan agar sistem tahu user ini login pakai Google apa.
      */
     public function updateGoogleTokens($id, $accessToken, $refreshToken, $expires) {
         if ($refreshToken) {
@@ -193,8 +233,8 @@ class UserModel {
     }
 
     /**
-     * Khusus untuk menyimpan token di kolom gcal_
-     * Digunakan saat user klik "Hubungkan Kalender" dari Dashboard
+     * MENYIMPAN TOKEN KALENDER GOOGLE.
+     * Khusus untuk fitur sinkronisasi kalender agar tidak tertukar dengan token login.
      */
     public function updateGcalTokens($id, $accessToken, $refreshToken, $expires) {
         if ($refreshToken) {
@@ -206,6 +246,9 @@ class UserModel {
         }
     }
 
+    /**
+     * Memperbarui profil user (Nama, Password, atau Foto).
+     */
     public function updateProfile($id, $nama, $password = null, $photo = null) {
         if ($password && $photo) {
             $stmt = $this->pdo->prepare("UPDATE users SET nama=?, password=?, photo=? WHERE id=?");
