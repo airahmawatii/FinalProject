@@ -124,50 +124,8 @@ if ($clientService->isServiceAccount()) {
 </head>
 <body class="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 min-h-screen flex text-gray-800">
 
-    <!-- Mobile Menu Button -->
-    <button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 p-2 bg-slate-800 rounded-lg text-white md:hidden shadow-lg">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
-
-    <!-- Sidebar -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 backdrop-blur-2xl bg-slate-900/80 border-r border-white/10 flex flex-col z-40 transform -translate-x-full md:translate-x-0 md:relative md:shadow-none transition-transform duration-300 ease-in-out shadow-2xl text-white">
-        <div class="p-8 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-transparent via-white/5 to-transparent">
-            <div>
-                <h2 class="text-2xl font-bold flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-                    <span class="text-3xl">🎓</span> TaskAcademy
-                </h2>
-                <p class="text-slate-400 text-[10px] mt-2 font-bold tracking-[0.2em] uppercase">Student Dashboard</p>
-            </div>
-            <button id="close-sidebar-btn" class="md:hidden text-slate-400 hover:text-white transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        
-        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
-            <!-- Status Card -->
-            <div class="mb-6 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-2xl p-4 border border-white/10 mx-2 shadow-inner">
-                <p class="text-[9px] text-blue-300 font-extrabold uppercase tracking-widest mb-1">Status Akademik</p>
-                <p class="text-sm text-white font-bold flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                    Semester Aktif: <?= !empty($semesters) ? max($semesters) : '1' ?>
-                </p>
-            </div>
-
-            <a href="dashboard_mahasiswa.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white font-bold transition transform md:hover:scale-[1.02] border border-white/10">
-                <span class="text-lg transition">🏠</span> Dashboard
-            </a>
-            
-            <p class="text-[10px] font-bold text-slate-500 px-4 mt-8 mb-3 uppercase tracking-widest">Utama</p>
-            <a href="daftar_tugas.php" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white font-medium transition duration-300 border border-transparent hover:border-white/10 group">
-                <span>📝</span> Daftar Tugas
-            </a>
-            
-        </nav>
-
-    </aside>
+    <!-- Include Sidebar Shared -->
+    <?php include __DIR__ . '/../layouts/sidebar_mahasiswa.php'; ?>
 
     <!-- Main Content -->
     <main class="flex-1 relative overflow-y-auto w-full md:w-auto">
@@ -352,28 +310,7 @@ if ($clientService->isServiceAccount()) {
                 });
         }
         document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-
-            function toggleSidebar() {
-                const isClosed = sidebar.classList.contains('-translate-x-full');
-                if (isClosed) {
-                    sidebar.classList.remove('-translate-x-full');
-                    overlay.classList.remove('hidden');
-                    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-                } else {
-                    sidebar.classList.add('-translate-x-full');
-                    overlay.classList.add('opacity-0');
-                    setTimeout(() => overlay.classList.add('hidden'), 300);
-                }
-            }
-            if(mobileMenuBtn) {
-                mobileMenuBtn.addEventListener('click', toggleSidebar);
-                overlay.addEventListener('click', toggleSidebar);
-                closeSidebarBtn.addEventListener('click', toggleSidebar);
-            }
+            // Mobile sidebar toggle script removed (Handled by shared layout)
 
             // --- Inisialisasi Kalender (Logika Timeline/Gantt Digabung) ---
             try {

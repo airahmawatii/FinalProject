@@ -8,10 +8,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <div class="h-20 flex items-center px-6 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
         <div class="flex items-center gap-3">
              <div class="w-10 h-10 bg-white p-1 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/20 overflow-hidden">
-                <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
+                <img src="<?= BASE_URL ?>/assets/img/logo_task_academia.jpg" alt="Logo" class="w-full h-full object-cover">
             </div>
             <div class="flex flex-col">
-                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">TaskAcademia</h2>
+                <h2 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 leading-tight">Task Academia</h2>
                 <p class="text-cyan-400 text-[9px] font-extrabold uppercase tracking-[0.2em]">Mahasiswa</p>
             </div>
         </div>
@@ -72,7 +72,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </button>
     <div class="flex items-center gap-2">
          <div class="bg-white p-1 rounded-lg border border-white/20 w-8 h-8 overflow-hidden">
-             <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover">
+             <img src="<?= BASE_URL ?>/assets/img/logo_task_academia.jpg" alt="Logo" class="w-full h-full object-cover">
          </div>
          <span class="font-bold text-white tracking-tight">TaskAcademia</span>
     </div>

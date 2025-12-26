@@ -38,9 +38,9 @@
             <div class="flex items-center gap-3">
                 <!-- Logo with white rounded container for visibility -->
                 <div class="bg-white/90 p-1.5 rounded-xl shadow-lg shadow-blue-500/20">
-                     <img src="<?= BASE_URL ?>/assets/img/logo.jpg" alt="TaskAcademia" class="h-8 w-auto">
+                     <img src="<?= BASE_URL ?>/assets/img/logo_task_academia.jpg" alt="Task Academia" class="h-8 w-auto">
                 </div>
-                <span class="font-bold text-xl tracking-tight text-white/90">TaskAcademia</span>
+                <span class="font-bold text-xl tracking-tight text-white/90">Task Academia</span>
             </div>
             <div class="flex items-center gap-6">
                 <a href="#features" class="hidden md:block text-sm font-semibold text-slate-300 hover:text-white transition">Fitur Utama</a>
