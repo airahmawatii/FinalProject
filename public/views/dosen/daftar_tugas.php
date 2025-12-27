@@ -150,7 +150,7 @@ $tasks = $taskModel->getByDosen($_SESSION['user']['id']);
                                     <span>👁️</span> Progress
                                 </a>
                                 <div class="flex gap-2">
-                                    <a href="edit_tugas.php?id=<?= $t['id'] ?>" class="bg-white/5 hover:bg-white/10 text-white p-3 rounded-2xl transition-all border border-white/10 hover:border-blue-500/50" title="Edit">
+                                    <a href="<?= BASE_URL ?>/views/dosen/edit_tugas.php?id=<?= $t['id'] ?>" class="bg-white/5 hover:bg-white/10 text-white p-3 rounded-2xl transition-all border border-white/10 hover:border-blue-500/50" title="Edit">
                                         <svg class="w-5 h-5 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     </a>
                                     <button onclick="confirmDelete(<?= $t['id'] ?>)" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-3 rounded-2xl transition-all border border-red-500/20 hover:border-red-500" title="Hapus">

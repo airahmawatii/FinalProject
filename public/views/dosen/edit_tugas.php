@@ -20,27 +20,9 @@ $courseModel = new CourseModel($pdo);
 $id = $_GET['id'] ?? null;
 $task = $taskModel->find($id);
 
-// DEBUG: Tampilkan informasi untuk troubleshooting
-if (!$task) {
-    die("DEBUG: Tugas dengan ID '$id' tidak ditemukan di database.");
-}
-
-// DEBUG: Tampilkan perbandingan ID
-if ($task['dosen_id'] != $_SESSION['user']['id']) {
-    echo "<pre style='background: #1e293b; color: white; padding: 20px; border-radius: 10px; margin: 20px;'>";
-    echo "🔍 DEBUG INFO - Masalah Ownership:\n\n";
-    echo "Task ID: " . $id . "\n";
-    echo "Task Title: " . htmlspecialchars($task['task_title']) . "\n\n";
-    echo "Task dosen_id (dari database): " . var_export($task['dosen_id'], true) . " (Type: " . gettype($task['dosen_id']) . ")\n";
-    echo "Session user id: " . var_export($_SESSION['user']['id'], true) . " (Type: " . gettype($_SESSION['user']['id']) . ")\n\n";
-    echo "Apakah sama? " . ($task['dosen_id'] == $_SESSION['user']['id'] ? 'YA ✅' : 'TIDAK ❌') . "\n";
-    echo "Strict comparison (===)? " . ($task['dosen_id'] === $_SESSION['user']['id'] ? 'YA ✅' : 'TIDAK ❌') . "\n\n";
-    echo "Session Data:\n";
-    print_r($_SESSION['user']);
-    echo "\nTask Data:\n";
-    print_r($task);
-    echo "</pre>";
-    die();
+//cek apakah ada tugas yang ditemukan dan milik dosen yang login
+if (!$task || $task['dosen_id'] != $_SESSION['user']['id']) {
+    die("Tugas tidak ditemukan atau bukan milik Anda.");
 }
 
 $courses = $courseModel->getByDosen($_SESSION['user']['id']);

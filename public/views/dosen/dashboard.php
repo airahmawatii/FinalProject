@@ -431,7 +431,7 @@ $ganttData = array_slice($ganttData, 0, 10);
                                             <div class="text-xs font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full mb-1">
                                                 <?= date('d M, H:i', strtotime($t['deadline'])) ?>
                                             </div>
-                                            <a href="edit_tugas.php?id=<?= $t['id'] ?>" class="text-xs text-blue-500 hover:text-blue-700 font-bold">Edit</a>
+                                            <a href="<?= BASE_URL ?>/views/dosen/edit_tugas.php?id=<?= $t['id'] ?>" class="text-xs text-blue-500 hover:text-blue-700 font-bold">Edit</a>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -491,7 +491,7 @@ $ganttData = array_slice($ganttData, 0, 10);
                                     <p class="mb-1"><strong>Matkul:</strong> ${info.event.title}</p>
                                     <p class="mb-1"><strong>Deadline:</strong> ${moment(info.event.extendedProps.deadline).format('DD MMM YYYY, HH:mm')}</p>
                                     <div class="mt-4 flex justify-end">
-                                        <a href="edit_tugas.php?id=${info.event.id}" class="text-blue-500 hover:underline">Lihat Detail</a>
+                                        <a href="<?= BASE_URL ?>/views/dosen/edit_tugas.php?id=${info.event.id}" class="text-blue-500 hover:underline">Lihat Detail</a>
                                     </div>
                                 </div>
                             `,
