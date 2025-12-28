@@ -458,6 +458,7 @@ $ganttData = array_slice($ganttData, 0, 10);
                     $isUrgent = (strtotime($t['deadline']) - time()) < (2 * 86400); 
                     
                     return [
+                        'id' => $t['id'], // ← TAMBAHKAN INI: ID task dari database
                         'title' => $t['course_name'] ?? 'Tugas', // HANYA NAMA MATKUL
                         'start' => $start,
                         'end' => $end,
