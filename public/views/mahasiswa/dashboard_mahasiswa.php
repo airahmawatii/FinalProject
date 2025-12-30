@@ -34,6 +34,7 @@ $semesters = $stmt->fetchAll(PDO::FETCH_COLUMN);
 // 2. Deadline Terdekat (Next Deadline) - Untuk ditampilkan di "Featured Card"
 // 3. Status Urgent (H-3 Deadline)
 $now = time();
+$today = date('Y-m-d'); // Tanggal hari ini (format: 2025-12-30)
 $nextDeadline = null;
 $urgentCount = 0;
 $completedCount = 0;
@@ -43,12 +44,16 @@ foreach ($tasks as $t) {
         $completedCount++;
     } else {
         $deadlineTime = strtotime($t['deadline']);
-        if ($deadlineTime > $now) {
+        $deadlineDate = date('Y-m-d', $deadlineTime); // Tanggal deadline (tanpa jam)
+        
+        // PERBAIKAN: Tampilkan tugas jika deadline-nya >= hari ini
+        // Jadi tugas hari ini tetap muncul meskipun jamnya sudah lewat
+        if ($deadlineDate >= $today) {
             // Logic cari deadline paling dekat yang belum lewat
             if ($nextDeadline === null || $deadlineTime < strtotime($nextDeadline['deadline'])) {
                 $nextDeadline = $t;
             }
-            // Logic Urgent: Deadline kurang dari 3 hari (3 * 24 jam)
+            // Logic Urgent: Deadline kurang dari 3 hari dari SEKARANG
             if ($deadlineTime - $now < 3 * 86400) $urgentCount++;
         }
     }

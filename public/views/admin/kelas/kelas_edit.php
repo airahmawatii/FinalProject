@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label class="block text-[10px] font-extrabold text-blue-300 uppercase tracking-widest ml-1">Nama Kelas</label>
                 <input type="text" name="nama_kelas" required placeholder="Contoh: IF-24-A" 
                        value="<?= htmlspecialchars($data['nama_kelas']) ?>"
-                       class="w-full px-5 py-3.5 glass rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-white border-white/10 transition-all">
+                       class="w-full px-5 py-3.5 bg-white rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:outline-none text-gray-900 border-white/10 transition-all">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -29,6 +29,10 @@ class Database {
             $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->db_name};charset=utf8mb4";
             $this->conn = new PDO($dsn, $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            // Set timezone database ke WIB (UTC+7) agar konsisten dengan waktu Indonesia
+            // Ini penting untuk query yang menggunakan DATE() dan waktu deadline
+            $this->conn->exec("SET time_zone = '+07:00'");
         } catch (PDOException $e) {
             echo "Connection error: " . $e->getMessage();
         }

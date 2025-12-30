@@ -27,6 +27,10 @@ echo "Mengecek deadline untuk tanggal: $today (Hari H) dan $tomorrow (H-1)\n";
 // -------------------------------------------------------------------------
 // 4. Cari Tugas Berdasarkan Tanggal Deadline
 // -------------------------------------------------------------------------
+// CATATAN PENTING: 
+// - Timezone database sudah di-set ke WIB (+07:00) di database.php
+// - Jadi DATE(t.deadline) akan otomatis menggunakan waktu Indonesia
+// - Tidak perlu CONVERT_TZ karena sudah di-handle di level koneksi
 $sql = "
     SELECT 
         t.id,

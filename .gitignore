@@ -12,5 +12,15 @@
 /app/google/service-account.json
 /app/google/credentials.json
 
-# Lainnya
+# File temporary dan backup
+*.bak
+*.tmp
+*.old
+*.log
 *.zip
+
+# File development
+image.png
+README.md
+DEPLOYMENT_GUIDE.md
+QUICK_REFERENCE_CRONJOB.md
