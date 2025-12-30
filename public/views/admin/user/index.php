@@ -16,14 +16,49 @@ $pdo = $db->connect();
 
 // Hapus user (We should ideally use Model, but keep it simple for now as per existing style)
 if (isset($_GET['delete_id'])) {
+    $id = $_GET['delete_id'];
     try {
+        $pdo->beginTransaction();
+
+        // 1. Bersihkan tabel-tabel anak (Child Tables)
+        // Jika database tidak menggunakan ON DELETE CASCADE, kita harus hapus manual.
+        
+        // A. Data terkait Mahasiswa
+        $pdo->prepare("DELETE FROM task_completions WHERE user_id=?")->execute([$id]);
+        $pdo->prepare("DELETE FROM submissions WHERE student_id=?")->execute([$id]); 
+        $pdo->prepare("DELETE FROM class_students WHERE student_id=?")->execute([$id]);
+        $pdo->prepare("DELETE FROM enrollments WHERE student_id=?")->execute([$id]);
+
+        // B. Data terkait Dosen
+        // Hapus relasi dosen ke matkul
+        $pdo->prepare("DELETE FROM dosen_courses WHERE dosen_id=?")->execute([$id]);
+        // Hapus tugas yang dibuat dosen ini (akan cascade ke submissions tugas tsb jika DB support, jika tidak kita biarkan DB error atau handle nanti)
+        // Kita asumsikan Tasks aman dihapus atau DB akan block jika ada submissions penting.
+        // Untuk amannya kita hapus tasks milik dosen ini:
+        $pdo->prepare("DELETE FROM tasks WHERE dosen_id=?")->execute([$id]);
+
+        // C. Data Profil Utama
+        $pdo->prepare("DELETE FROM mahasiswa WHERE user_id=?")->execute([$id]);
+        $pdo->prepare("DELETE FROM dosen WHERE user_id=?")->execute([$id]);
+
+        // 2. Hapus user
         $stmt = $pdo->prepare("DELETE FROM users WHERE id=?");
-        $stmt->execute([$_GET['delete_id']]);
-        header("Location: index.php?msg=deleted");
+        $stmt->execute([$id]);
+
+        if ($stmt->rowCount() > 0) {
+            $pdo->commit();
+            header("Location: index.php?msg=deleted");
+        } else {
+            $pdo->rollBack();
+            header("Location: index.php?msg=warning");
+        }
         exit;
     } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         error_log("Error deleting user: " . $e->getMessage());
-        header("Location: index.php?msg=error");
+        header("Location: index.php?msg=error&detail=" . urlencode("Gagal menghapus: pastikan tidak ada data terkait (Tugas/Pengumpulan) yang mencegah penghapusan."));
         exit;
     }
 }
@@ -55,6 +90,8 @@ if (isset($_GET['msg'])) {
         case 'created': $msg = "Pengguna berhasil ditambahkan!"; break;
         case 'updated': $msg = "Data pengguna berhasil diperbarui!"; break;
         case 'deleted': $msg = "Pengguna berhasil dihapus!"; break;
+        case 'error': $msg = "Terjadi kesalahan: " . ($_GET['detail'] ?? 'Gagal menghapus pengguna.'); break;
+        case 'warning': $msg = "Pengguna tidak ditemukan atau sudah terhapus."; break;
     }
 }
 ?>
@@ -131,7 +168,7 @@ if (isset($_GET['msg'])) {
             </header>
 
             <?php if ($msg): ?>
-                <div class="glass border-green-500/30 text-green-300 p-4 rounded-xl mb-6"><?= $msg ?></div>
+                <div class="glass border-<?= (strpos($_GET['msg']??'', 'error')!==false || strpos($_GET['msg']??'', 'warning')!==false)?'red':'green' ?>-500/30 text-<?= (strpos($_GET['msg']??'', 'error')!==false || strpos($_GET['msg']??'', 'warning')!==false)?'red':'green' ?>-300 p-4 rounded-xl mb-6"><?= htmlspecialchars($msg) ?></div>
             <?php endif; ?>
 
             <!-- Action Bar -->

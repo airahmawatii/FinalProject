@@ -11,29 +11,31 @@ use Google\Service\Calendar\EventDateTime;
 class CalendarService
 {
     /**
-     * Create Event in User's Primary Calendar
-     * $user: Array from DB (must contain id, refresh_token etc)
-     * $eventData: ['summary', 'description', 'start', 'end'] (Dates in ISO format or Y-m-d H:i:s)
+     * Membuat Event Baru di Kalender Utama User
+     *
+     * @param array $user Data User dari Database (wajib berisi id, refresh_token, dll)
+     * @param array $eventData Data Event: ['summary', 'description', 'start', 'end']
+     *                         (Format tanggal harus ISO 8601 atau 'Y-m-d H:i:s')
      */
     public function createEvent($user, $eventData)
     {
-        // 1. Get Valid Token
+        // 1. Dapatkan Token Valid (Refresh jika perlu)
         $accessToken = GoogleTokenService::refreshTokenIfNeeded($user);
         if (!$accessToken) {
-            error_log("CalendarService: Failed to get access token for User ID " . $user['id']);
+            error_log("CalendarService: Gagal mendapatkan access token untuk User ID " . $user['id']);
             return false;
         }
 
-        // 2. Setup Client with Token
+        // 2. Siapkan Client Google dengan Token tadi
         $serviceInfo = new GoogleClientService();
         $client = $serviceInfo->getClient();
         $client->setAccessToken($accessToken);
 
-        // 3. Setup Calendar Service
+        // 3. Siapkan Layanan Kalender
         $service = new Calendar($client);
 
-        // 4. Prepare Event
-        // Ensure format is ISO 8601 for Google
+        // 4. Siapkan Data Event
+        // Pastikan format tanggal mengikuti standar ISO 8601 agar diterima Google
         $startStr = date('c', strtotime($eventData['start']));
         $endStr   = date('c', strtotime($eventData['end']));
 

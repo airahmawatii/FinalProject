@@ -7,26 +7,26 @@ require_once __DIR__ . '/GoogleClientService.php';
 class GoogleTokenService
 {
     /**
-     * Check if token is expired, and refresh if needed.
-     * Returns valid access_token or null.
+     * Cek apakah token sudah kadaluarsa, dan refresh jika perlu.
+     * Mengembalikan access_token yang valid atau null jika gagal.
      */
     public static function refreshTokenIfNeeded($user)
     {
-        // 1. If we don't have refresh token, we can't do anything if access token expires
+        // 1. Jika kita tidak punya refresh token, kita tidak bisa berbuat apa-apa kalau access token mati
         if (empty($user['refresh_token'])) {
-            // Try to return access_token if it's still valid, otherwise fail
+            // Coba kembalikan access_token jika masih ada, kalau tidak ya gagal
             if (!empty($user['access_token'])) {
                 return $user['access_token']; 
             }
             return null;
         }
 
-        // 2. Check if current access token is still valid (give 60s buffer)
+        // 2. Cek apakah access token saat ini masih valid (beri waktu jeda 60 detik)
         if (!empty($user['token_expires']) && time() < ($user['token_expires'] - 60)) {
             return $user['access_token'];
         }
 
-        // 3. Refresh It
+        // 3. Lakukan Refresh
         $service = new GoogleClientService();
         $client = $service->getClient();
 
@@ -36,9 +36,9 @@ class GoogleTokenService
             return null;
         }
 
-        // 4. Save new token to DB
+        // 4. Simpan token baru ke DB
         $accessToken = $newToken['access_token'];
-        $expiresIn = $newToken['expires_in']; // seconds
+        $expiresIn = $newToken['expires_in']; // detik
         $expiresAt = time() + $expiresIn;
 
         $db = new Database();
